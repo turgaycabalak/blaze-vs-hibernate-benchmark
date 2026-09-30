@@ -4,6 +4,9 @@ Do you still need [Blaze-Persistence](https://persistence.blazebit.com/) with a 
 This repository measures the four areas Blaze is known for against **Hibernate 7.4 / Spring Data JPA 4.1**
 (and, where it matters, Hibernate 7.2), on PostgreSQL 18 with a 1M-order dataset.
 
+📝 **Article:** [Do You Still Need Blaze-Persistence in 2026? I Benchmarked It Against Hibernate 7.4](https://medium.com/@turgay.cab/do-you-still-need-blaze-persistence-in-2026-i-benchmarked-it-against-hibernate-7-4-026d94e68186)
+(source in [`article/`](article/))
+
 Every benchmark first checks that all strategies return exactly the same result, then measures.
 Numbers are from one machine; run it yourself and compare the shapes of the curves, not the absolute values.
 

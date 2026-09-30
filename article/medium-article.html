@@ -1,0 +1,204 @@
+<!--
+  Medium draft. Title and subtitle go into Medium's title fields; the body below is pasted.
+  Images: charts are served from the public GitHub repo; the summary table is article/summary-table.png
+  and is uploaded where the [SUMMARY TABLE] marker is.
+-->
+<h1>Do You Still Need Blaze-Persistence in 2026? I Benchmarked It Against Hibernate 7.4</h1>
+<h2>Four problems Blaze is famous for, tested on 1 million orders. Hibernate now solves most of them. And I found a bug.</h2>
+
+<p>Blaze-Persistence is a popular library for JPA and Hibernate. Many teams added it because older Hibernate versions had real problems: slow deep pages, loading lists with their children, building DTOs, and writing advanced SQL like CTEs.</p>
+<p>But Hibernate did not stand still. So I asked a simple question: <strong>with Hibernate 7.4 and Spring Boot 4.1, is Blaze still worth adding to a project?</strong></p>
+<p>This article has two parts. The first part is a short summary. If you only read that, you get the answer. The second part has the details: charts, small code examples and the reasons behind each number.</p>
+
+<h3>Part 1: The short version</h3>
+
+<h4>What I tested</h4>
+<p>I picked the four jobs Blaze is best known for. For each job I wrote the same query in several ways: with plain Hibernate, with Spring Data JPA, by hand, and with Blaze. Then I measured them on the same database with 1 million orders.</p>
+<ul>
+<li><strong>Deep pagination:</strong> jumping to page 25,000 of a long list.</li>
+<li><strong>Orders with their lines:</strong> “give me the newest 20 orders and all their order lines”.</li>
+<li><strong>A list screen:</strong> building a response with order, customer name and product names.</li>
+<li><strong>An analytics query:</strong> “the latest order of every customer”, which needs a window function and a CTE.</li>
+</ul>
+
+<h4>How I tested</h4>
+<ul>
+<li>PostgreSQL 18 in Docker, 100,000 customers, 1 million orders, 3 million order lines. The data is generated the same way every time.</li>
+<li>Java 25, Spring Boot 4.1.1, Hibernate 7.4.5, Spring Data JPA 4.1.1, Blaze-Persistence 1.6.20.</li>
+<li>Before timing anything, I checked that every method returns <strong>exactly the same data</strong>. A fast query that returns wrong data is not a win.</li>
+<li>Each method ran many times. I report the median time.</li>
+</ul>
+
+<h4>The results</h4>
+<p>[SUMMARY TABLE]</p>
+
+<h4>What I learned</h4>
+<ol>
+<li><strong>You don’t need Blaze for fast deep pagination.</strong> Blaze was fast. But a small hand-written Hibernate query was just as fast. The surprise: Spring Data’s built-in “keyset” pagination was as slow as normal pagination on PostgreSQL.</li>
+<li><strong>Hibernate 7.4 fixed the famous “loads everything into memory” problem.</strong> With Hibernate 7.2 (the version in Spring Boot 4.0), the same code needed 3.2 seconds and 1.1 GB of memory for one request. With 7.4 it needs 2 ms.</li>
+<li><strong>The real danger in list screens is the N+1 problem</strong>, where one request quietly runs hundreds of queries. Spring Data projections fall into this trap too. Blaze avoids it with very little code, but plain Hibernate has good fixes as well.</li>
+<li><strong>For CTEs and window functions, plain Hibernate is now better.</strong> It was simpler to write and faster to run. And Blaze has a bug here: it silently removed rows from the result (100 rows expected, 8 returned).</li>
+</ol>
+
+<h4>So, when should you use Blaze?</h4>
+<ul>
+<li><strong>Use it</strong> if you are on Hibernate older than 7.4 (for example Spring Boot 4.0) and you page lists that load child collections.</li>
+<li><strong>Use it</strong> if you have many complex, nested DTOs and you want to write less mapping code. Blaze Entity Views are really pleasant for this.</li>
+<li><strong>Skip it</strong> for keyset pagination, CTEs and window functions. Hibernate 7.4 does these well.</li>
+<li><strong>Remember the cost:</strong> another library to learn, to update and to debug. In this project it also failed to start on a computer with a Turkish locale, and it returned wrong rows for CTE queries.</li>
+</ul>
+
+<p>All code, data and charts are on GitHub, so you can run everything on your own machine: <a href="https://github.com/turgaycabalak/blaze-vs-hibernate-benchmark">github.com/turgaycabalak/blaze-vs-hibernate-benchmark</a></p>
+<p>Want to know <em>why</em> the numbers look like this? Keep reading.</p>
+
+<hr>
+
+<h3>Part 2: The details</h3>
+
+<h4>The test setup</h4>
+<p>The data model is a small shop: <code>Customer</code>, <code>Product</code>, <code>PurchaseOrder</code> and <code>OrderLine</code>. Every customer has exactly 10 orders, and every order has 1 to 5 lines.</p>
+<p>A few rules I followed:</p>
+<ul>
+<li><strong>Same data for everyone.</strong> The data is created with plain arithmetic in a Flyway script, not with random numbers. You get the same rows on your machine.</li>
+<li><strong>Correctness first.</strong> A test checks that every method returns the same result before anything is measured.</li>
+<li><strong>One request at a time.</strong> I measure the cost of one query, not how many requests per second a server can handle.</li>
+<li><strong>Warm up first.</strong> Java gets faster after it runs code a few times, so each method runs many times before I start measuring.</li>
+<li><strong>The whole call is measured:</strong> transaction, SQL and turning rows into Java objects.</li>
+</ul>
+<p>Machine: Intel i7-1260P laptop (12 cores), 32 GB RAM, Windows 10, Docker Desktop. The database had enough memory to keep all data in RAM, so we measure the query method, not the disk.</p>
+<blockquote>A small lesson: my first run was done while a YouTube video was playing. All numbers were 35–50% higher. The ranking did not change, but I threw that run away. Close your browser when you benchmark.</blockquote>
+
+<h4>1. Deep pagination</h4>
+<p><strong>The problem.</strong> The classic way to get page N is <code>OFFSET</code>: “skip N×20 rows, then give me 20”. The database still has to read all the skipped rows. Page 50,000 means reading 1 million rows and throwing them away.</p>
+<p>The better way is <strong>keyset pagination</strong>: “give me 20 rows that come after the last row I saw”. The database can jump straight to that row using the index.</p>
+<figure><img src="https://raw.githubusercontent.com/turgaycabalak/blaze-vs-hibernate-benchmark/main/results/pagination/offset-vs-keyset.png" alt="Median latency by page number for offset and keyset strategies"><figcaption>Both axes are logarithmic. Lower is better.</figcaption></figure>
+<p><strong>What the numbers say (page 25,000):</strong></p>
+<ul>
+<li>OFFSET: 251 ms</li>
+<li>Spring Data keyset (<code>Window</code>) and Hibernate keyset (<code>KeyedPage</code>): about 248 ms. <strong>Not faster than OFFSET!</strong></li>
+<li>Blaze keyset: 1.7 ms</li>
+<li>Hand-written HQL keyset: 1.4 ms</li>
+</ul>
+<p><strong>Why?</strong> It is all about how the condition is written. Spring Data and Hibernate generate this:</p>
+<pre>where created_at &lt; ? or (created_at = ? and id &lt; ?)</pre>
+<p>PostgreSQL cannot use the index to jump with this condition. It starts at the top and filters rows one by one. At page 25,000 the plan says it removed 499,980 rows.</p>
+<p>Blaze writes the same condition as a “row comparison”:</p>
+<pre>where (created_at, id) &lt; (?, ?)</pre>
+<p>PostgreSQL uses this directly on the index and reads only 20 rows. The good news: you can write it yourself in HQL.</p>
+<pre>List&lt;PurchaseOrder&gt; nextPage = em.createQuery("""
+        select o from PurchaseOrder o
+        where (o.createdAt, o.id) &lt; (:createdAt, :id)
+        order by o.createdAt desc, o.id desc""", PurchaseOrder.class)
+    .setParameter("createdAt", lastRow.createdAt())
+    .setParameter("id", lastRow.id())
+    .setMaxResults(20)
+    .getResultList();</pre>
+<p><strong>A trap to know about.</strong> Spring Data’s keyset looked fast on the <em>last</em> page (1.7 ms at page 50,000). Why? There are only a few rows left after the last key, so filtering is cheap. If you only test the last page, you will think it works.</p>
+<p><strong>Another trap: Blaze counts by default.</strong> Blaze’s paginated queries also count all rows, so you can show “page 3 of 50,000”. On 1 million rows this adds about 27 ms to every page, and keyset stops being fast. Turn it off if you don’t need it:</p>
+<pre>cbf.create(em, PurchaseOrder.class)
+    .orderByDesc("createdAt").orderByDesc("id")
+    .page(keysetPage, firstResult, 20)
+    .withCountQuery(false)   // no COUNT(*) on every page
+    .getResultList();</pre>
+<p><strong>Rule:</strong> use keyset pagination for deep lists. Write the row comparison yourself or use Blaze, but don’t assume Spring Data’s <code>Window</code> is fast on PostgreSQL. Test a page in the middle, not only the last one.</p>
+
+<h4>2. Orders with their lines</h4>
+<p><strong>The problem.</strong> You want the newest 20 orders and all their lines. The natural code is a <code>join fetch</code> with a limit:</p>
+<pre>em.createQuery("""
+        select o from PurchaseOrder o join fetch o.lines
+        where o.createdAt &gt;= :since
+        order by o.createdAt desc, o.id desc""", PurchaseOrder.class)
+    .setParameter("since", since)
+    .setMaxResults(20)
+    .getResultList();</pre>
+<p>For years this was a famous trap. The join returns one row per <em>line</em>, not per order, so Hibernate could not put <code>LIMIT 20</code> in the SQL. Instead it loaded <em>every</em> matching order with all its lines into memory and kept the first 20. You only see a warning in the log:</p>
+<pre>HHH90003004: firstResult/maxResults specified with collection fetch; applying in memory</pre>
+<p>Blaze became famous for fixing this. I ran the same code on Hibernate 7.2 (what Spring Boot 4.0 ships) and on Hibernate 7.4.</p>
+<figure><img src="https://raw.githubusercontent.com/turgaycabalak/blaze-vs-hibernate-benchmark/main/results/collection-fetch/latency.png" alt="Median latency by number of matching orders, Hibernate 7.2 vs 7.4 vs Blaze"><figcaption>The x-axis is how many orders match the filter before paging.</figcaption></figure>
+<figure><img src="https://raw.githubusercontent.com/turgaycabalak/blaze-vs-hibernate-benchmark/main/results/collection-fetch/memory.png" alt="Memory allocated per request by number of matching orders"><figcaption>Memory allocated for one request.</figcaption></figure>
+<p><strong>What the numbers say (250,000 matching orders):</strong></p>
+<ul>
+<li>Hibernate 7.2: <strong>3.2 seconds and 1.1 GB of memory</strong> for one request of 20 orders.</li>
+<li>Hibernate 7.4: <strong>2 ms and 0.13 MB</strong>. Same code.</li>
+<li>Blaze: about 3 ms on both versions.</li>
+</ul>
+<p><strong>Why?</strong> Hibernate 7.4 now picks the 20 orders in a subquery first, and then joins their lines. That is exactly the trick Blaze uses. The problem is simply gone.</p>
+<p><strong>A new trap: subselect fetching.</strong> Hibernate has a setting that loads collections with a subquery. The subquery has no limit, so it loads the lines of <em>all</em> matching orders: 2.7 seconds and 906 MB at 250,000 orders, even on Hibernate 7.4. Batch fetching is the safer choice. It is one line and needed 2 queries and 2.8 ms:</p>
+<pre>session.setFetchBatchSize(20);   // or hibernate.default_batch_fetch_size=20</pre>
+<p><strong>Rule:</strong> on Hibernate 7.4 or newer, paging with <code>join fetch</code> is safe, and you don’t need Blaze for this. On older versions, use Blaze, batch fetching, or two queries (ids first, then the rest). Avoid subselect fetching for paged lists.</p>
+
+<h4>3. A list screen with nested data</h4>
+<p><strong>The problem.</strong> An API returns a list of orders. Each order has the customer name and a list of lines with product names. The same response was built in seven ways.</p>
+<figure><img src="https://raw.githubusercontent.com/turgaycabalak/blaze-vs-hibernate-benchmark/main/results/projection/latency.png" alt="Median latency by page size for seven ways to build an order list"><figcaption>The x-axis is the number of orders per page.</figcaption></figure>
+<p><strong>What the numbers say (50 orders per page):</strong></p>
+<ul>
+<li>Loading entities and mapping them to DTOs with getters: <strong>254 queries</strong>, about 96 ms.</li>
+<li>Spring Data interface projection with a nested list: <strong>also 254 queries</strong>, about 101 ms.</li>
+<li>The same mapping with batch fetching on: 7 queries, 7 ms.</li>
+<li>Two hand-written HQL DTO queries: 2 queries, 5 ms.</li>
+<li>Blaze Entity View: 1 query, 3 ms.</li>
+</ul>
+<p>With 1,000 orders per page, the N+1 versions ran <strong>5,001 queries and took about 2 seconds</strong>. The hand-written HQL was the fastest there (12.7 ms), and Blaze was close behind (15.9 ms).</p>
+<p><strong>Why?</strong> This is the N+1 problem. Every getter on a lazy relation can start a new query: one for the customer, one for the lines, one for each product. It is easy to miss, because the code looks innocent. The Spring Data projection surprised me most. It looks like a “projection”, but for a nested list it loads full entities and then does the same N+1.</p>
+<p>Blaze solves this with an interface that describes the result. Blaze turns it into one SQL query that selects only these columns:</p>
+<pre>@EntityView(PurchaseOrder.class)
+public interface OrderSummaryView {
+    @IdMapping Long getId();
+    LocalDateTime getCreatedAt();
+    BigDecimal getTotalAmount();
+
+    @Mapping("customer.name")
+    String getCustomerName();
+
+    List&lt;LineSummaryView&gt; getLines();   // lines with product names
+}</pre>
+<p>I also tried Blaze’s <code>MULTISET</code> mode, which packs the lines as JSON inside one row per order. Here it was slower than the normal mode (24 ms vs 16 ms at 1,000 orders). It helps when several collections multiply the number of rows. With one small list, it did not help.</p>
+<p><strong>Rule:</strong> never fill DTOs by calling getters on lazy entities, and be careful with Spring Data projections that contain lists. The cheapest fix is batch fetching. For fewer queries, write DTO queries or use Blaze Entity Views. Blaze wins on <em>less code</em>, not on speed.</p>
+
+<h4>4. CTEs and window functions</h4>
+<p><strong>The problem.</strong> “Give me the latest order of every customer.” The modern SQL answer is a window function (<code>row_number()</code>) inside a CTE or a subquery. Old JPA could not do this, and Blaze filled that gap.</p>
+<p>Since version 6.2, Hibernate supports CTEs, subqueries in <code>FROM</code> and window functions in HQL:</p>
+<pre>with latest as (
+    select o.customer.id as customerId, o.id as orderId,
+           row_number() over (partition by o.customer.id
+                              order by o.createdAt desc, o.id desc) as rn
+    from PurchaseOrder o
+)
+select l.customerId, l.orderId
+from latest l
+where l.rn = 1</pre>
+<p>In Blaze, the same query needs an extra entity class that describes the CTE columns, plus a builder that binds each column.</p>
+<figure><img src="https://raw.githubusercontent.com/turgaycabalak/blaze-vs-hibernate-benchmark/main/results/latest-order/latency.png" alt="Median latency by number of customers in scope for six ways to find the latest order per customer"><figcaption>Every customer has 10 orders, so 100,000 customers means all 1 million orders.</figcaption></figure>
+<p><strong>What the numbers say:</strong></p>
+<ul>
+<li>Up to 10,000 customers, HQL and Blaze were close (80 ms vs 110 ms).</li>
+<li>At 100,000 customers: HQL 884 ms, <strong>Blaze 12.5 seconds</strong>.</li>
+<li>A surprise: the old-style JPQL with <code>NOT EXISTS</code> (no window function) was the fastest at 100,000 customers (455 ms), but the slowest for small ranges. Modern SQL is not always faster; it depends on the size.</li>
+</ul>
+<p><strong>Why was Blaze so slow?</strong> I checked the database first: the SQL plan and database time were the same as HQL (about 1 second). So the time was spent in Java. A quick profile showed that 88% of the time was inside Hibernate’s <code>ListResultsConsumer.addUnique</code>.</p>
+<p>For CTE and subquery queries, Blaze asks Hibernate to remove duplicate rows from the result. Hibernate does this by comparing every new row with all rows before it. With 100,000 rows, that is billions of comparisons.</p>
+<p><strong>And it gives wrong results.</strong> If two rows are equal, one of them is removed. I wrote the same query in HQL and in Blaze, but selected only the customer’s country:</p>
+<pre>HQL rows:   100  [DE, US, GB, FR, NL, ES, IT, TR, DE, US, ...]
+Blaze rows: 8    [DE, US, GB, FR, NL, ES, IT, TR]</pre>
+<p>No error, no warning. 92 rows are simply gone. This happens with Blaze 1.6.20 on both Hibernate 7.2 and 7.4. A test in the repository documents it.</p>
+<p><strong>Rule:</strong> on Hibernate 6.2 or newer, write CTEs and window functions in HQL. If you use these Blaze features on Hibernate 7, always select a unique column (like an id), and don’t use them for large results such as reports or exports.</p>
+
+<h4>Two more surprises</h4>
+<p><strong>Blaze did not start on a Turkish computer.</strong> Blaze builds some internal names with <code>toLowerCase()</code>. In the Turkish locale, <code>"Integer".toLowerCase()</code> becomes <code>"ınteger"</code> (with a dotless ı), so a lookup fails and Blaze crashes on startup. The fix is to start the JVM with <code>-Duser.language=en</code>. A small thing, but it cost me time.</p>
+<p><strong>Versions move at different speeds.</strong> Spring Boot 4.1 ships Spring Data 4.1, but Blaze’s integration module is still called <code>spring-data-4.0</code>. It worked in my tests, but every extra library is one more thing to check when you upgrade.</p>
+
+<h4>Limitations</h4>
+<p>These are my results on one laptop, with one database (PostgreSQL), one data model, and one request at a time. Absolute numbers include about 1–2 ms of overhead per call from the transaction and Docker. Look at the shape of the lines, and run the tests on your own setup if the decision matters to you.</p>
+
+<h4>Try it yourself</h4>
+<p>You need JDK 25, Maven and Docker.</p>
+<pre>git clone https://github.com/turgaycabalak/blaze-vs-hibernate-benchmark
+cd blaze-vs-hibernate-benchmark
+mvn test                  # correctness tests, about 1 minute
+mvn test -Pbenchmark      # all benchmarks, about 45 minutes</pre>
+<p>Every results folder has the raw numbers, the SQL each method sends, the database plans and the charts.</p>
+
+<h4>Final thoughts</h4>
+<p>Blaze-Persistence solved real problems. But Hibernate 7.4 has caught up on most of them: keyset pagination with a small query, collection paging in SQL, and CTEs and window functions in HQL. What Blaze still gives you is a nice way to write complex DTOs with less code.</p>
+<p>So my answer is: <strong>don’t add Blaze for performance alone. Add it if its Entity Views save your team real work, and if you accept the cost of one more library.</strong></p>
+<p>If you use Blaze or Hibernate in production and see different results, I would love to hear about it in the comments.</p>
