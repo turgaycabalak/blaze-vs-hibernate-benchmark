@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>4.1.1</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+
+	<groupId>dev.blazebench</groupId>
+	<artifactId>blaze-benchmark</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>blaze-benchmark</name>
+	<description>Blaze-Persistence vs Hibernate 7 / Spring Data JPA benchmarks</description>
+
+	<properties>
+		<java.version>25</java.version>
+		<blaze-persistence.version>1.6.20</blaze-persistence.version>
+		<!--
+			Blaze-Persistence 1.6.20 fails to start under a Turkish default locale:
+			CriteriaBuilderConfigurationImpl looks up "cast_" + simpleName.toLowerCase(),
+			and "Integer".toLowerCase() is "ınteger" in tr_TR (dotless i), so the lookup returns null.
+			Pin the JVM locale for tests and spring-boot:run.
+		-->
+		<jvm.locale.args>-Duser.language=en -Duser.country=US</jvm.locale.args>
+		<!-- Benchmarks (@Tag("benchmark")) are slow and need the full dataset: run them with -Pbenchmark -->
+		<test.groups/>
+		<test.excludedGroups>benchmark</test.excludedGroups>
+		<benchmark.jvm.args/>
+		<!-- Appended to benchmark result folders; set by the hibernate72 profile -->
+		<results.suffix/>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.blazebit</groupId>
+				<artifactId>blaze-persistence-bom</artifactId>
+				<version>${blaze-persistence.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<!-- Blaze-Persistence -->
+		<dependency>
+			<groupId>com.blazebit</groupId>
+			<artifactId>blaze-persistence-core-api-jakarta</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.blazebit</groupId>
+			<artifactId>blaze-persistence-core-impl-jakarta</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.blazebit</groupId>
+			<artifactId>blaze-persistence-entity-view-api-jakarta</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.blazebit</groupId>
+			<artifactId>blaze-persistence-entity-view-impl-jakarta</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.blazebit</groupId>
+			<artifactId>blaze-persistence-integration-hibernate-7.2</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.blazebit</groupId>
+			<artifactId>blaze-persistence-integration-spring-data-4.0</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webmvc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-testcontainers</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-postgresql</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- Renders the result CSVs to PNG charts, so reproducing needs only Maven + Docker -->
+		<dependency>
+			<groupId>org.knowm.xchart</groupId>
+			<artifactId>xchart</artifactId>
+			<version>4.0.4</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<jvmArguments>${jvm.locale.args}</jvmArguments>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>${jvm.locale.args} ${benchmark.jvm.args}</argLine>
+					<includes>
+						<include>**/*Test.java</include>
+						<include>**/*Tests.java</include>
+						<include>**/*Benchmark.java</include>
+					</includes>
+					<groups>${test.groups}</groups>
+					<excludedGroups>${test.excludedGroups}</excludedGroups>
+					<systemPropertyVariables>
+						<blaze.version>${blaze-persistence.version}</blaze.version>
+						<results.suffix>${results.suffix}</results.suffix>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>default-compile</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+						<configuration>
+							<annotationProcessorPaths>
+								<path>
+									<groupId>org.projectlombok</groupId>
+									<artifactId>lombok</artifactId>
+								</path>
+							</annotationProcessorPaths>
+						</configuration>
+					</execution>
+					<execution>
+						<id>default-testCompile</id>
+						<phase>test-compile</phase>
+						<goals>
+							<goal>testCompile</goal>
+						</goals>
+						<configuration>
+							<annotationProcessorPaths>
+								<path>
+									<groupId>org.projectlombok</groupId>
+									<artifactId>lombok</artifactId>
+								</path>
+							</annotationProcessorPaths>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<profiles>
+		<profile>
+			<id>benchmark</id>
+			<properties>
+				<test.groups>benchmark</test.groups>
+				<test.excludedGroups>none</test.excludedGroups>
+				<!-- Fixed heap: no resizing noise during measurement -->
+				<benchmark.jvm.args>-Xms2g -Xmx2g</benchmark.jvm.args>
+			</properties>
+		</profile>
+		<profile>
+			<!--
+				Hibernate 7.2 = what Spring Boot 4.0.x ships (4.0.8 -> 7.2.24.Final).
+				Hibernate 7.4 changed how a paginated collection fetch is executed; this profile runs the
+				same code on the older version for a before/after comparison. Output goes to results/*-hibernate-7.2.
+			-->
+			<!-- no dot in the id: PowerShell splits "-Phibernate-7.2" into two arguments -->
+			<id>hibernate72</id>
+			<properties>
+				<hibernate.version>7.2.24.Final</hibernate.version>
+				<results.suffix>-hibernate-7.2</results.suffix>
+			</properties>
+		</profile>
+	</profiles>
+
+</project>

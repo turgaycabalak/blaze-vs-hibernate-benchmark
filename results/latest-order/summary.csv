@@ -1,0 +1,25 @@
+scenario,label,customers,orders_in_scope,samples,p50_ms,p95_ms,p99_ms,mean_ms,min_ms,max_ms,allocated_mb_p50
+jpql-not-exists,"Portable JPQL, NOT EXISTS (no window functions)",100,1000,30,18.712,19.754,19.973,18.826,17.508,19.973,0.084
+jpql-not-exists,"Portable JPQL, NOT EXISTS (no window functions)",1000,10000,30,58.826,62.731,63.117,59.058,56.780,63.117,0.796
+jpql-not-exists,"Portable JPQL, NOT EXISTS (no window functions)",10000,100000,30,127.435,141.670,146.495,129.647,121.332,146.495,7.955
+jpql-not-exists,"Portable JPQL, NOT EXISTS (no window functions)",100000,1000000,30,454.573,519.621,624.336,466.937,410.164,624.336,78.735
+hql-derived-table,"HQL: window function in a FROM subquery",100,1000,30,3.527,5.005,5.048,3.728,2.875,5.048,0.084
+hql-derived-table,"HQL: window function in a FROM subquery",1000,10000,30,12.619,13.348,13.460,12.694,12.005,13.460,0.796
+hql-derived-table,"HQL: window function in a FROM subquery",10000,100000,30,79.167,87.528,87.707,79.763,75.601,87.707,7.955
+hql-derived-table,"HQL: window function in a FROM subquery",100000,1000000,30,891.583,970.427,1676.851,919.878,810.873,1676.851,78.735
+hql-cte,"HQL: window function in a CTE",100,1000,30,3.248,4.943,5.615,3.508,2.400,5.615,0.084
+hql-cte,"HQL: window function in a CTE",1000,10000,30,12.386,14.699,16.593,12.540,11.299,16.593,0.796
+hql-cte,"HQL: window function in a CTE",10000,100000,30,79.724,83.665,87.104,80.332,77.090,87.104,7.955
+hql-cte,"HQL: window function in a CTE",100000,1000000,30,883.744,979.015,1026.493,894.837,807.826,1026.493,78.735
+native-distinct-on,"Native SQL: DISTINCT ON (PostgreSQL only)",100,1000,30,21.483,25.301,25.738,21.791,20.352,25.738,0.087
+native-distinct-on,"Native SQL: DISTINCT ON (PostgreSQL only)",1000,10000,30,30.540,32.686,48.752,31.155,28.768,48.752,0.803
+native-distinct-on,"Native SQL: DISTINCT ON (PostgreSQL only)",10000,100000,30,108.809,119.676,120.118,109.317,102.761,120.118,7.997
+native-distinct-on,"Native SQL: DISTINCT ON (PostgreSQL only)",100000,1000000,30,821.921,965.342,2749.703,896.196,773.887,2749.703,79.120
+blaze-cte,"Blaze: window function in a CTE",100,1000,30,4.736,6.103,6.548,4.843,3.873,6.548,0.211
+blaze-cte,"Blaze: window function in a CTE",1000,10000,30,14.399,16.334,16.558,14.469,12.883,16.558,0.948
+blaze-cte,"Blaze: window function in a CTE",10000,100000,30,109.218,115.665,119.563,110.183,105.138,119.563,8.383
+blaze-cte,"Blaze: window function in a CTE",100000,1000000,30,12544.276,13922.372,23114.627,12985.928,11230.855,23114.627,81.909
+blaze-from-subquery,"Blaze: window function in a FROM subquery",100,1000,30,4.869,6.856,7.849,5.040,3.818,7.849,0.243
+blaze-from-subquery,"Blaze: window function in a FROM subquery",1000,10000,30,14.399,15.400,16.431,14.438,12.965,16.431,0.980
+blaze-from-subquery,"Blaze: window function in a FROM subquery",10000,100000,30,111.371,122.615,127.479,112.472,104.712,127.479,8.414
+blaze-from-subquery,"Blaze: window function in a FROM subquery",100000,1000000,30,12584.253,20714.782,24458.949,13502.329,11757.394,24458.949,81.941

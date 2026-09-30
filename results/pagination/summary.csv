@@ -1,0 +1,57 @@
+scenario,label,page,offset_rows,samples,p50_ms,p95_ms,p99_ms,mean_ms,min_ms,max_ms
+spring-data-page,"Spring Data Page (OFFSET + COUNT)",1,0,100,32.457,34.779,36.031,32.757,31.065,37.944
+spring-data-page,"Spring Data Page (OFFSET + COUNT)",10,180,100,32.633,37.073,38.411,33.321,31.042,39.219
+spring-data-page,"Spring Data Page (OFFSET + COUNT)",100,1980,100,35.848,55.278,71.611,40.787,31.764,72.799
+spring-data-page,"Spring Data Page (OFFSET + COUNT)",1000,19980,100,55.925,66.169,75.954,56.192,45.356,79.416
+spring-data-page,"Spring Data Page (OFFSET + COUNT)",10000,199980,100,145.916,183.808,217.815,151.822,125.037,237.775
+spring-data-page,"Spring Data Page (OFFSET + COUNT)",25000,499980,100,281.270,311.813,330.803,283.434,252.787,350.291
+spring-data-page,"Spring Data Page (OFFSET + COUNT)",50000,999980,100,484.873,548.824,576.770,491.739,450.567,585.411
+jpa-offset,"JPA / Hibernate OFFSET",1,0,100,1.783,2.430,2.652,1.863,1.325,2.767
+jpa-offset,"JPA / Hibernate OFFSET",10,180,100,1.720,2.231,2.640,1.752,1.312,3.073
+jpa-offset,"JPA / Hibernate OFFSET",100,1980,100,3.685,6.028,6.288,4.180,2.944,8.042
+jpa-offset,"JPA / Hibernate OFFSET",1000,19980,100,17.904,21.539,24.130,18.169,14.362,24.148
+jpa-offset,"JPA / Hibernate OFFSET",10000,199980,100,118.091,150.006,182.674,120.645,93.273,186.140
+jpa-offset,"JPA / Hibernate OFFSET",25000,499980,100,250.907,279.339,296.293,254.971,230.430,296.484
+jpa-offset,"JPA / Hibernate OFFSET",50000,999980,100,456.367,514.164,535.456,463.635,432.560,537.829
+blaze-offset,"Blaze OFFSET",1,0,100,1.524,2.158,2.320,1.583,1.226,2.757
+blaze-offset,"Blaze OFFSET",10,180,100,1.661,2.371,2.915,1.745,1.320,3.322
+blaze-offset,"Blaze OFFSET",100,1980,100,3.728,6.237,6.586,4.097,2.670,7.178
+blaze-offset,"Blaze OFFSET",1000,19980,100,17.830,22.450,26.406,17.713,12.601,28.198
+blaze-offset,"Blaze OFFSET",10000,199980,100,115.645,149.774,177.988,118.978,90.438,193.422
+blaze-offset,"Blaze OFFSET",25000,499980,100,247.946,282.736,292.235,250.702,228.721,307.402
+blaze-offset,"Blaze OFFSET",50000,999980,100,453.095,514.852,555.291,460.608,430.549,558.351
+spring-data-keyset,"Spring Data keyset (Window)",1,0,100,1.408,2.141,3.042,1.536,1.159,3.237
+spring-data-keyset,"Spring Data keyset (Window)",10,180,100,1.833,3.116,3.566,1.940,1.388,3.927
+spring-data-keyset,"Spring Data keyset (Window)",100,1980,100,3.723,6.448,6.934,4.114,2.381,6.948
+spring-data-keyset,"Spring Data keyset (Window)",1000,19980,100,18.470,22.487,23.779,18.194,12.329,28.451
+spring-data-keyset,"Spring Data keyset (Window)",10000,199980,100,111.642,146.023,160.894,117.445,92.161,193.302
+spring-data-keyset,"Spring Data keyset (Window)",25000,499980,100,247.894,286.397,300.248,251.413,227.878,306.209
+spring-data-keyset,"Spring Data keyset (Window)",50000,999980,100,1.667,2.253,2.718,1.746,1.405,3.228
+hibernate-keyset,"Hibernate 7 keyset (KeyedPage)",1,0,100,1.647,2.115,2.384,1.711,1.301,3.850
+hibernate-keyset,"Hibernate 7 keyset (KeyedPage)",10,180,100,1.986,3.469,3.963,2.176,1.599,3.982
+hibernate-keyset,"Hibernate 7 keyset (KeyedPage)",100,1980,100,3.775,6.839,7.619,4.406,2.608,8.658
+hibernate-keyset,"Hibernate 7 keyset (KeyedPage)",1000,19980,100,18.612,24.113,25.240,18.808,12.414,28.352
+hibernate-keyset,"Hibernate 7 keyset (KeyedPage)",10000,199980,100,118.874,149.840,158.201,118.926,92.971,173.960
+hibernate-keyset,"Hibernate 7 keyset (KeyedPage)",25000,499980,100,249.257,283.237,292.618,251.066,228.989,303.041
+hibernate-keyset,"Hibernate 7 keyset (KeyedPage)",50000,999980,100,1.640,2.469,3.241,1.764,1.365,3.326
+hql-row-value-keyset,"Hand-written HQL keyset (row value)",1,0,100,1.254,1.752,2.227,1.319,0.906,2.406
+hql-row-value-keyset,"Hand-written HQL keyset (row value)",10,180,100,1.191,1.814,2.312,1.284,0.911,2.660
+hql-row-value-keyset,"Hand-written HQL keyset (row value)",100,1980,100,1.510,3.399,3.639,1.926,0.958,3.747
+hql-row-value-keyset,"Hand-written HQL keyset (row value)",1000,19980,100,2.159,3.187,3.582,2.261,1.339,3.699
+hql-row-value-keyset,"Hand-written HQL keyset (row value)",10000,199980,100,1.632,2.636,2.918,1.728,1.147,3.127
+hql-row-value-keyset,"Hand-written HQL keyset (row value)",25000,499980,100,1.431,2.017,2.145,1.497,1.124,2.420
+hql-row-value-keyset,"Hand-written HQL keyset (row value)",50000,999980,100,1.122,1.629,1.834,1.176,0.886,2.117
+blaze-keyset,"Blaze keyset",1,0,100,1.263,1.666,1.958,1.329,1.000,2.389
+blaze-keyset,"Blaze keyset",10,180,100,1.766,2.458,3.536,1.886,1.397,3.701
+blaze-keyset,"Blaze keyset",100,1980,100,1.913,4.298,4.846,2.572,1.432,4.867
+blaze-keyset,"Blaze keyset",1000,19980,100,2.861,4.269,4.410,2.931,1.676,4.467
+blaze-keyset,"Blaze keyset",10000,199980,100,1.951,3.032,3.521,2.114,1.388,3.550
+blaze-keyset,"Blaze keyset",25000,499980,100,1.721,2.374,2.560,1.797,1.369,3.911
+blaze-keyset,"Blaze keyset",50000,999980,100,1.489,2.511,3.553,1.612,1.203,3.684
+blaze-keyset-with-count,"Blaze keyset + COUNT (default)",1,0,100,27.155,28.716,29.696,27.255,25.625,35.306
+blaze-keyset-with-count,"Blaze keyset + COUNT (default)",10,180,100,27.932,32.150,36.647,28.552,26.626,38.046
+blaze-keyset-with-count,"Blaze keyset + COUNT (default)",100,1980,100,27.987,52.922,57.361,34.873,26.292,58.022
+blaze-keyset-with-count,"Blaze keyset + COUNT (default)",1000,19980,100,36.771,48.361,51.310,36.836,27.448,52.009
+blaze-keyset-with-count,"Blaze keyset + COUNT (default)",10000,199980,100,28.807,38.639,42.341,30.553,26.827,43.256
+blaze-keyset-with-count,"Blaze keyset + COUNT (default)",25000,499980,100,28.056,29.603,29.951,28.151,26.862,30.109
+blaze-keyset-with-count,"Blaze keyset + COUNT (default)",50000,999980,100,27.894,30.334,33.095,28.211,26.528,33.896

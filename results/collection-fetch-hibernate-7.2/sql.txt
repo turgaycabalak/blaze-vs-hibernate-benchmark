@@ -1,0 +1,28 @@
+SQL per strategy, Hibernate 7.2.24.Final (10,000 matching orders; N+1 truncated after 3 statements)
+
+== jpa-fetch-join (1 statements)
+select po1_0.id,po1_0.created_at,po1_0.customer_id,l1_0.order_id,l1_0.id,l1_0.product_id,l1_0.quantity,l1_0.unit_price,po1_0.status,po1_0.total_amount from purchase_order po1_0 join order_line l1_0 on po1_0.id=l1_0.order_id where po1_0.created_at>=? order by po1_0.created_at desc,po1_0.id desc
+
+== spring-data-entity-graph (1 statements)
+select po1_0.id,po1_0.created_at,po1_0.customer_id,l1_0.order_id,l1_0.id,l1_0.product_id,l1_0.quantity,l1_0.unit_price,po1_0.status,po1_0.total_amount from purchase_order po1_0 left join order_line l1_0 on po1_0.id=l1_0.order_id where po1_0.created_at>=? order by po1_0.created_at desc,po1_0.id desc
+
+== lazy-n-plus-1 (21 statements)
+select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 where po1_0.created_at>=? order by po1_0.created_at desc,po1_0.id desc fetch first ? rows only
+select l1_0.order_id,l1_0.id,l1_0.product_id,l1_0.quantity,l1_0.unit_price from order_line l1_0 where l1_0.order_id=?
+select l1_0.order_id,l1_0.id,l1_0.product_id,l1_0.quantity,l1_0.unit_price from order_line l1_0 where l1_0.order_id=?
+
+== hibernate-batch-fetch (2 statements)
+select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 where po1_0.created_at>=? order by po1_0.created_at desc,po1_0.id desc fetch first ? rows only
+select l1_0.order_id,l1_0.id,l1_0.product_id,l1_0.quantity,l1_0.unit_price from order_line l1_0 where l1_0.order_id = any (?)
+
+== hibernate-subselect-fetch (2 statements)
+select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 where po1_0.created_at>=? order by po1_0.created_at desc,po1_0.id desc fetch first ? rows only
+select l1_0.order_id,l1_0.id,l1_0.product_id,l1_0.quantity,l1_0.unit_price from order_line l1_0 where l1_0.order_id in (select po1_0.id from purchase_order po1_0 where po1_0.created_at>=?)
+
+== two-step-ids (2 statements)
+select po1_0.id from purchase_order po1_0 where po1_0.created_at>=? order by po1_0.created_at desc,po1_0.id desc fetch first ? rows only
+select po1_0.id,po1_0.created_at,po1_0.customer_id,l1_0.order_id,l1_0.id,l1_0.product_id,l1_0.quantity,l1_0.unit_price,po1_0.status,po1_0.total_amount from purchase_order po1_0 join order_line l1_0 on po1_0.id=l1_0.order_id where po1_0.id in (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) order by po1_0.created_at desc,po1_0.id desc
+
+== blaze-fetch (1 statements)
+select po1_0.id,po1_0.created_at,po1_0.customer_id,l1_0.order_id,l1_0.id,l1_0.product_id,l1_0.quantity,l1_0.unit_price,po1_0.status,po1_0.total_amount from purchase_order po1_0 left join order_line l1_0 on po1_0.id=l1_0.order_id where po1_0.id in (select po2_0.id from purchase_order po2_0 where po2_0.created_at>=? order by po2_0.created_at desc,po2_0.id desc fetch first 20 rows only) order by po1_0.created_at desc,po1_0.id desc
+

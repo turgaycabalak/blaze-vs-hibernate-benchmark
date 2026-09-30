@@ -1,0 +1,7 @@
+# Tiny dataset for fast correctness tests (not for benchmarking).
+spring:
+  flyway:
+    placeholders:
+      customers: 100
+      products: 50
+      orders: 1000

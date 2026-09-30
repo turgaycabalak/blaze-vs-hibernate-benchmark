@@ -1,0 +1,27 @@
+SQL sent by each strategy for page 25000 (bind values shown as ?)
+
+== spring-data-page
+select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 order by po1_0.created_at desc,po1_0.id desc offset ? rows fetch first ? rows only
+select count(po1_0.id) from purchase_order po1_0
+
+== jpa-offset
+select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 order by po1_0.created_at desc,po1_0.id desc offset ? rows fetch first ? rows only
+
+== blaze-offset
+select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 order by po1_0.created_at desc,po1_0.id desc offset ? rows fetch first ? rows only
+
+== spring-data-keyset
+select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 where po1_0.created_at<? or po1_0.created_at=? and po1_0.id<? order by po1_0.created_at desc,po1_0.id desc fetch first ? rows only
+
+== hibernate-keyset
+select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 where po1_0.created_at<? or po1_0.id<? and po1_0.created_at=? order by 2 desc,1 desc fetch first ? rows only
+
+== hql-row-value-keyset
+select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 where (po1_0.created_at,po1_0.id)<(?,?) order by po1_0.created_at desc,po1_0.id desc fetch first ? rows only
+
+== blaze-keyset
+select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 where (po1_0.created_at, po1_0.id) < (?, ?) and 0=0 order by po1_0.created_at desc,po1_0.id desc offset ? rows fetch first ? rows only
+
+== blaze-keyset-with-count
+select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount,(select count(*) from purchase_order po2_0) from purchase_order po1_0 where (po1_0.created_at, po1_0.id) < (?, ?) and 0=0 order by po1_0.created_at desc,po1_0.id desc offset ? rows fetch first ? rows only
+

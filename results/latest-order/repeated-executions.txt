@@ -1,0 +1,316 @@
+Latest order per customer, 100000 customers, 8 executions of the same query on one connection
+
+hql-cte: #1 2401 ms, #2 1805 ms, #3 1418 ms, #4 915 ms, #5 941 ms, #6 1031 ms, #7 1191 ms, #8 1015 ms
+blaze-cte: #1 14377 ms, #2 14079 ms, #3 13970 ms, #4 13753 ms, #5 13741 ms, #6 14793 ms, #7 16909 ms, #8 12779 ms
+
+Plans (auto_explain, without ANALYZE), in execution order:
+	Query Text: select 'plan-marker hql-cte'
+	Result  (cost=0.00..0.01 rows=1 width=32)
+2026-09-30 21:01:44.298 UTC [85] LOG:  duration: 1530.739 ms  plan:
+	Query Text: with latest (customerId,orderId,createdAt,totalAmount,rn) as (select po1_0.customer_id,po1_0.id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc,po1_0.id desc) from purchase_order po1_0 where po1_0.customer_id<=$1) select l1_0.customerId,c2_0.name,l1_0.orderId,l1_0.createdAt,l1_0.totalAmount from latest l1_0 join customer c2_0 on c2_0.id=l1_0.customerId where l1_0.rn=1 order by l1_0.customerId
+	Query Parameters: $1 = '100000'
+	Merge Join  (cost=1.95..159893.25 rows=5000 width=43)
+	  Merge Cond: (l1_0.customerid = c2_0.id)
+	  ->  Subquery Scan on l1_0  (cost=1.66..155837.46 rows=5000 width=29)
+	        Filter: (l1_0.rn = 1)
+	        ->  WindowAgg  (cost=1.66..143337.46 rows=1000000 width=37)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= 1)
+	              ->  Incremental Sort  (cost=1.52..123337.46 rows=1000000 width=29)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC, po1_0.id DESC
+	                    Presorted Key: po1_0.customer_id
+	                    ->  Index Scan using idx_purchase_order_customer on purchase_order po1_0  (cost=0.42..92213.56 rows=1000000 width=29)
+	                          Index Cond: (customer_id <= '100000'::bigint)
+	  ->  Index Scan using customer_pkey on customer c2_0  (cost=0.29..3743.29 rows=100000 width=22)
+	JIT:
+	  Functions: 15
+	  Options: Inlining false, Optimization false, Expressions true, Deforming true
+2026-09-30 21:01:46.102 UTC [85] LOG:  duration: 1727.953 ms  plan:
+	Query Text: with latest (customerId,orderId,createdAt,totalAmount,rn) as (select po1_0.customer_id,po1_0.id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc,po1_0.id desc) from purchase_order po1_0 where po1_0.customer_id<=$1) select l1_0.customerId,c2_0.name,l1_0.orderId,l1_0.createdAt,l1_0.totalAmount from latest l1_0 join customer c2_0 on c2_0.id=l1_0.customerId where l1_0.rn=1 order by l1_0.customerId
+	Query Parameters: $1 = '100000'
+	Merge Join  (cost=1.95..159893.25 rows=5000 width=43)
+	  Merge Cond: (l1_0.customerid = c2_0.id)
+	  ->  Subquery Scan on l1_0  (cost=1.66..155837.46 rows=5000 width=29)
+	        Filter: (l1_0.rn = 1)
+	        ->  WindowAgg  (cost=1.66..143337.46 rows=1000000 width=37)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= 1)
+	              ->  Incremental Sort  (cost=1.52..123337.46 rows=1000000 width=29)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC, po1_0.id DESC
+	                    Presorted Key: po1_0.customer_id
+	                    ->  Index Scan using idx_purchase_order_customer on purchase_order po1_0  (cost=0.42..92213.56 rows=1000000 width=29)
+	                          Index Cond: (customer_id <= '100000'::bigint)
+	  ->  Index Scan using customer_pkey on customer c2_0  (cost=0.29..3743.29 rows=100000 width=22)
+	JIT:
+	  Functions: 15
+	  Options: Inlining false, Optimization false, Expressions true, Deforming true
+2026-09-30 21:01:47.519 UTC [85] LOG:  duration: 1378.912 ms  plan:
+	Query Text: with latest (customerId,orderId,createdAt,totalAmount,rn) as (select po1_0.customer_id,po1_0.id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc,po1_0.id desc) from purchase_order po1_0 where po1_0.customer_id<=$1) select l1_0.customerId,c2_0.name,l1_0.orderId,l1_0.createdAt,l1_0.totalAmount from latest l1_0 join customer c2_0 on c2_0.id=l1_0.customerId where l1_0.rn=1 order by l1_0.customerId
+	Query Parameters: $1 = '100000'
+	Merge Join  (cost=1.95..159893.25 rows=5000 width=43)
+	  Merge Cond: (l1_0.customerid = c2_0.id)
+	  ->  Subquery Scan on l1_0  (cost=1.66..155837.46 rows=5000 width=29)
+	        Filter: (l1_0.rn = 1)
+	        ->  WindowAgg  (cost=1.66..143337.46 rows=1000000 width=37)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= 1)
+	              ->  Incremental Sort  (cost=1.52..123337.46 rows=1000000 width=29)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC, po1_0.id DESC
+	                    Presorted Key: po1_0.customer_id
+	                    ->  Index Scan using idx_purchase_order_customer on purchase_order po1_0  (cost=0.42..92213.56 rows=1000000 width=29)
+	                          Index Cond: (customer_id <= '100000'::bigint)
+	  ->  Index Scan using customer_pkey on customer c2_0  (cost=0.29..3743.29 rows=100000 width=22)
+	JIT:
+	  Functions: 15
+	  Options: Inlining false, Optimization false, Expressions true, Deforming true
+2026-09-30 21:01:48.435 UTC [85] LOG:  duration: 866.073 ms  plan:
+	Query Text: with latest (customerId,orderId,createdAt,totalAmount,rn) as (select po1_0.customer_id,po1_0.id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc,po1_0.id desc) from purchase_order po1_0 where po1_0.customer_id<=$1) select l1_0.customerId,c2_0.name,l1_0.orderId,l1_0.createdAt,l1_0.totalAmount from latest l1_0 join customer c2_0 on c2_0.id=l1_0.customerId where l1_0.rn=1 order by l1_0.customerId
+	Query Parameters: $1 = '100000'
+	Merge Join  (cost=1.95..159893.25 rows=5000 width=43)
+	  Merge Cond: (l1_0.customerid = c2_0.id)
+	  ->  Subquery Scan on l1_0  (cost=1.66..155837.46 rows=5000 width=29)
+	        Filter: (l1_0.rn = 1)
+	        ->  WindowAgg  (cost=1.66..143337.46 rows=1000000 width=37)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= 1)
+	              ->  Incremental Sort  (cost=1.52..123337.46 rows=1000000 width=29)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC, po1_0.id DESC
+	                    Presorted Key: po1_0.customer_id
+	                    ->  Index Scan using idx_purchase_order_customer on purchase_order po1_0  (cost=0.42..92213.56 rows=1000000 width=29)
+	                          Index Cond: (customer_id <= '100000'::bigint)
+	  ->  Index Scan using customer_pkey on customer c2_0  (cost=0.29..3743.29 rows=100000 width=22)
+	JIT:
+	  Functions: 15
+	  Options: Inlining false, Optimization false, Expressions true, Deforming true
+2026-09-30 21:01:49.376 UTC [85] LOG:  duration: 888.351 ms  plan:
+	Query Text: with latest (customerId,orderId,createdAt,totalAmount,rn) as (select po1_0.customer_id,po1_0.id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc,po1_0.id desc) from purchase_order po1_0 where po1_0.customer_id<=$1) select l1_0.customerId,c2_0.name,l1_0.orderId,l1_0.createdAt,l1_0.totalAmount from latest l1_0 join customer c2_0 on c2_0.id=l1_0.customerId where l1_0.rn=1 order by l1_0.customerId
+	Query Parameters: $1 = '100000'
+	Merge Join  (cost=1.95..159893.25 rows=5000 width=43)
+	  Merge Cond: (l1_0.customerid = c2_0.id)
+	  ->  Subquery Scan on l1_0  (cost=1.66..155837.46 rows=5000 width=29)
+	        Filter: (l1_0.rn = 1)
+	        ->  WindowAgg  (cost=1.66..143337.46 rows=1000000 width=37)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= 1)
+	              ->  Incremental Sort  (cost=1.52..123337.46 rows=1000000 width=29)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC, po1_0.id DESC
+	                    Presorted Key: po1_0.customer_id
+	                    ->  Index Scan using idx_purchase_order_customer on purchase_order po1_0  (cost=0.42..92213.56 rows=1000000 width=29)
+	                          Index Cond: (customer_id <= '100000'::bigint)
+	  ->  Index Scan using customer_pkey on customer c2_0  (cost=0.29..3743.29 rows=100000 width=22)
+	JIT:
+	  Functions: 15
+	  Options: Inlining false, Optimization false, Expressions true, Deforming true
+2026-09-30 21:01:50.407 UTC [85] LOG:  duration: 949.376 ms  plan:
+	Query Text: with latest (customerId,orderId,createdAt,totalAmount,rn) as (select po1_0.customer_id,po1_0.id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc,po1_0.id desc) from purchase_order po1_0 where po1_0.customer_id<=$1) select l1_0.customerId,c2_0.name,l1_0.orderId,l1_0.createdAt,l1_0.totalAmount from latest l1_0 join customer c2_0 on c2_0.id=l1_0.customerId where l1_0.rn=1 order by l1_0.customerId
+	Query Parameters: $1 = '100000'
+	Merge Join  (cost=1.95..159893.25 rows=5000 width=43)
+	  Merge Cond: (l1_0.customerid = c2_0.id)
+	  ->  Subquery Scan on l1_0  (cost=1.66..155837.46 rows=5000 width=29)
+	        Filter: (l1_0.rn = 1)
+	        ->  WindowAgg  (cost=1.66..143337.46 rows=1000000 width=37)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= 1)
+	              ->  Incremental Sort  (cost=1.52..123337.46 rows=1000000 width=29)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC, po1_0.id DESC
+	                    Presorted Key: po1_0.customer_id
+	                    ->  Index Scan using idx_purchase_order_customer on purchase_order po1_0  (cost=0.42..92213.56 rows=1000000 width=29)
+	                          Index Cond: (customer_id <= '100000'::bigint)
+	  ->  Index Scan using customer_pkey on customer c2_0  (cost=0.29..3743.29 rows=100000 width=22)
+	JIT:
+	  Functions: 15
+	  Options: Inlining false, Optimization false, Expressions true, Deforming true
+2026-09-30 21:01:51.598 UTC [85] LOG:  duration: 1137.625 ms  plan:
+	Query Text: with latest (customerId,orderId,createdAt,totalAmount,rn) as (select po1_0.customer_id,po1_0.id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc,po1_0.id desc) from purchase_order po1_0 where po1_0.customer_id<=$1) select l1_0.customerId,c2_0.name,l1_0.orderId,l1_0.createdAt,l1_0.totalAmount from latest l1_0 join customer c2_0 on c2_0.id=l1_0.customerId where l1_0.rn=1 order by l1_0.customerId
+	Query Parameters: $1 = '100000'
+	Merge Join  (cost=1.95..159893.25 rows=5000 width=43)
+	  Merge Cond: (l1_0.customerid = c2_0.id)
+	  ->  Subquery Scan on l1_0  (cost=1.66..155837.46 rows=5000 width=29)
+	        Filter: (l1_0.rn = 1)
+	        ->  WindowAgg  (cost=1.66..143337.46 rows=1000000 width=37)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= 1)
+	              ->  Incremental Sort  (cost=1.52..123337.46 rows=1000000 width=29)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC, po1_0.id DESC
+	                    Presorted Key: po1_0.customer_id
+	                    ->  Index Scan using idx_purchase_order_customer on purchase_order po1_0  (cost=0.42..92213.56 rows=1000000 width=29)
+	                          Index Cond: (customer_id <= '100000'::bigint)
+	  ->  Index Scan using customer_pkey on customer c2_0  (cost=0.29..3743.29 rows=100000 width=22)
+	JIT:
+	  Functions: 15
+	  Options: Inlining false, Optimization false, Expressions true, Deforming true
+2026-09-30 21:01:52.615 UTC [85] LOG:  duration: 960.901 ms  plan:
+	Query Text: with latest (customerId,orderId,createdAt,totalAmount,rn) as (select po1_0.customer_id,po1_0.id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc,po1_0.id desc) from purchase_order po1_0 where po1_0.customer_id<=$1) select l1_0.customerId,c2_0.name,l1_0.orderId,l1_0.createdAt,l1_0.totalAmount from latest l1_0 join customer c2_0 on c2_0.id=l1_0.customerId where l1_0.rn=1 order by l1_0.customerId
+	Query Parameters: $1 = '100000'
+	Merge Join  (cost=1.95..159893.25 rows=5000 width=43)
+	  Merge Cond: (l1_0.customerid = c2_0.id)
+	  ->  Subquery Scan on l1_0  (cost=1.66..155837.46 rows=5000 width=29)
+	        Filter: (l1_0.rn = 1)
+	        ->  WindowAgg  (cost=1.66..143337.46 rows=1000000 width=37)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= 1)
+	              ->  Incremental Sort  (cost=1.52..123337.46 rows=1000000 width=29)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC, po1_0.id DESC
+	                    Presorted Key: po1_0.customer_id
+	                    ->  Index Scan using idx_purchase_order_customer on purchase_order po1_0  (cost=0.42..92213.56 rows=1000000 width=29)
+	                          Index Cond: (customer_id <= '100000'::bigint)
+	  ->  Index Scan using customer_pkey on customer c2_0  (cost=0.29..3743.29 rows=100000 width=22)
+	JIT:
+	  Functions: 15
+	  Options: Inlining false, Optimization false, Expressions true, Deforming true
+2026-09-30 21:01:52.729 UTC [85] LOG:  duration: 0.005 ms  plan:
+	Query Text: select 'plan-marker blaze-cte'
+	Result  (cost=0.00..0.01 rows=1 width=32)
+2026-09-30 21:02:07.005 UTC [85] LOG:  duration: 1002.340 ms  plan:
+	Query Text: with LatestOrderCte(order_id, customer_id, created_at, total_amount, row_number) AS( select po1_0.id,po1_0.customer_id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc nulls last,po1_0.id desc nulls last) from purchase_order po1_0 where po1_0.customer_id<=$1 ) select loc1_0.customer_id,c1_0.name,loc1_0.order_id,loc1_0.created_at,loc1_0.total_amount from LatestOrderCte loc1_0 join customer c1_0 on (c1_0.id=loc1_0.customer_id) where loc1_0.row_number=$2 order by loc1_0.customer_id
+	Query Parameters: $1 = '100000', $2 = '1'
+	Merge Join  (cost=1.95..159893.25 rows=5000 width=43)
+	  Merge Cond: (loc1_0.customer_id = c1_0.id)
+	  ->  Subquery Scan on loc1_0  (cost=1.66..155837.46 rows=5000 width=29)
+	        Filter: (loc1_0.row_number = '1'::bigint)
+	        ->  WindowAgg  (cost=1.66..143337.46 rows=1000000 width=37)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= '1'::bigint)
+	              ->  Incremental Sort  (cost=1.52..123337.46 rows=1000000 width=29)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC NULLS LAST, po1_0.id DESC NULLS LAST
+	                    Presorted Key: po1_0.customer_id
+	                    ->  Index Scan using idx_purchase_order_customer on purchase_order po1_0  (cost=0.42..92213.56 rows=1000000 width=29)
+	                          Index Cond: (customer_id <= '100000'::bigint)
+	  ->  Index Scan using customer_pkey on customer c1_0  (cost=0.29..3743.29 rows=100000 width=22)
+	JIT:
+	  Functions: 15
+	  Options: Inlining false, Optimization false, Expressions true, Deforming true
+2026-09-30 21:02:21.085 UTC [85] LOG:  duration: 884.316 ms  plan:
+	Query Text: with LatestOrderCte(order_id, customer_id, created_at, total_amount, row_number) AS( select po1_0.id,po1_0.customer_id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc nulls last,po1_0.id desc nulls last) from purchase_order po1_0 where po1_0.customer_id<=$1 ) select loc1_0.customer_id,c1_0.name,loc1_0.order_id,loc1_0.created_at,loc1_0.total_amount from LatestOrderCte loc1_0 join customer c1_0 on (c1_0.id=loc1_0.customer_id) where loc1_0.row_number=$2 order by loc1_0.customer_id
+	Query Parameters: $1 = '100000', $2 = '1'
+	Merge Join  (cost=1.95..159893.25 rows=5000 width=43)
+	  Merge Cond: (loc1_0.customer_id = c1_0.id)
+	  ->  Subquery Scan on loc1_0  (cost=1.66..155837.46 rows=5000 width=29)
+	        Filter: (loc1_0.row_number = '1'::bigint)
+	        ->  WindowAgg  (cost=1.66..143337.46 rows=1000000 width=37)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= '1'::bigint)
+	              ->  Incremental Sort  (cost=1.52..123337.46 rows=1000000 width=29)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC NULLS LAST, po1_0.id DESC NULLS LAST
+	                    Presorted Key: po1_0.customer_id
+	                    ->  Index Scan using idx_purchase_order_customer on purchase_order po1_0  (cost=0.42..92213.56 rows=1000000 width=29)
+	                          Index Cond: (customer_id <= '100000'::bigint)
+	  ->  Index Scan using customer_pkey on customer c1_0  (cost=0.29..3743.29 rows=100000 width=22)
+	JIT:
+	  Functions: 15
+	  Options: Inlining false, Optimization false, Expressions true, Deforming true
+2026-09-30 21:02:35.055 UTC [85] LOG:  duration: 947.550 ms  plan:
+	Query Text: with LatestOrderCte(order_id, customer_id, created_at, total_amount, row_number) AS( select po1_0.id,po1_0.customer_id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc nulls last,po1_0.id desc nulls last) from purchase_order po1_0 where po1_0.customer_id<=$1 ) select loc1_0.customer_id,c1_0.name,loc1_0.order_id,loc1_0.created_at,loc1_0.total_amount from LatestOrderCte loc1_0 join customer c1_0 on (c1_0.id=loc1_0.customer_id) where loc1_0.row_number=$2 order by loc1_0.customer_id
+	Query Parameters: $1 = '100000', $2 = '1'
+	Merge Join  (cost=1.95..159893.25 rows=5000 width=43)
+	  Merge Cond: (loc1_0.customer_id = c1_0.id)
+	  ->  Subquery Scan on loc1_0  (cost=1.66..155837.46 rows=5000 width=29)
+	        Filter: (loc1_0.row_number = '1'::bigint)
+	        ->  WindowAgg  (cost=1.66..143337.46 rows=1000000 width=37)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= '1'::bigint)
+	              ->  Incremental Sort  (cost=1.52..123337.46 rows=1000000 width=29)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC NULLS LAST, po1_0.id DESC NULLS LAST
+	                    Presorted Key: po1_0.customer_id
+	                    ->  Index Scan using idx_purchase_order_customer on purchase_order po1_0  (cost=0.42..92213.56 rows=1000000 width=29)
+	                          Index Cond: (customer_id <= '100000'::bigint)
+	  ->  Index Scan using customer_pkey on customer c1_0  (cost=0.29..3743.29 rows=100000 width=22)
+	JIT:
+	  Functions: 15
+	  Options: Inlining false, Optimization false, Expressions true, Deforming true
+2026-09-30 21:02:48.807 UTC [85] LOG:  duration: 980.393 ms  plan:
+	Query Text: with LatestOrderCte(order_id, customer_id, created_at, total_amount, row_number) AS( select po1_0.id,po1_0.customer_id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc nulls last,po1_0.id desc nulls last) from purchase_order po1_0 where po1_0.customer_id<=$1 ) select loc1_0.customer_id,c1_0.name,loc1_0.order_id,loc1_0.created_at,loc1_0.total_amount from LatestOrderCte loc1_0 join customer c1_0 on (c1_0.id=loc1_0.customer_id) where loc1_0.row_number=$2 order by loc1_0.customer_id
+	Query Parameters: $1 = '100000', $2 = '1'
+	Merge Join  (cost=1.95..159893.25 rows=5000 width=43)
+	  Merge Cond: (loc1_0.customer_id = c1_0.id)
+	  ->  Subquery Scan on loc1_0  (cost=1.66..155837.46 rows=5000 width=29)
+	        Filter: (loc1_0.row_number = '1'::bigint)
+	        ->  WindowAgg  (cost=1.66..143337.46 rows=1000000 width=37)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= '1'::bigint)
+	              ->  Incremental Sort  (cost=1.52..123337.46 rows=1000000 width=29)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC NULLS LAST, po1_0.id DESC NULLS LAST
+	                    Presorted Key: po1_0.customer_id
+	                    ->  Index Scan using idx_purchase_order_customer on purchase_order po1_0  (cost=0.42..92213.56 rows=1000000 width=29)
+	                          Index Cond: (customer_id <= '100000'::bigint)
+	  ->  Index Scan using customer_pkey on customer c1_0  (cost=0.29..3743.29 rows=100000 width=22)
+	JIT:
+	  Functions: 15
+	  Options: Inlining false, Optimization false, Expressions true, Deforming true
+2026-09-30 21:03:02.547 UTC [85] LOG:  duration: 948.812 ms  plan:
+	Query Text: with LatestOrderCte(order_id, customer_id, created_at, total_amount, row_number) AS( select po1_0.id,po1_0.customer_id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc nulls last,po1_0.id desc nulls last) from purchase_order po1_0 where po1_0.customer_id<=$1 ) select loc1_0.customer_id,c1_0.name,loc1_0.order_id,loc1_0.created_at,loc1_0.total_amount from LatestOrderCte loc1_0 join customer c1_0 on (c1_0.id=loc1_0.customer_id) where loc1_0.row_number=$2 order by loc1_0.customer_id
+	Query Parameters: $1 = '100000', $2 = '1'
+	Merge Join  (cost=1.95..159893.25 rows=5000 width=43)
+	  Merge Cond: (loc1_0.customer_id = c1_0.id)
+	  ->  Subquery Scan on loc1_0  (cost=1.66..155837.46 rows=5000 width=29)
+	        Filter: (loc1_0.row_number = '1'::bigint)
+	        ->  WindowAgg  (cost=1.66..143337.46 rows=1000000 width=37)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= '1'::bigint)
+	              ->  Incremental Sort  (cost=1.52..123337.46 rows=1000000 width=29)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC NULLS LAST, po1_0.id DESC NULLS LAST
+	                    Presorted Key: po1_0.customer_id
+	                    ->  Index Scan using idx_purchase_order_customer on purchase_order po1_0  (cost=0.42..92213.56 rows=1000000 width=29)
+	                          Index Cond: (customer_id <= '100000'::bigint)
+	  ->  Index Scan using customer_pkey on customer c1_0  (cost=0.29..3743.29 rows=100000 width=22)
+	JIT:
+	  Functions: 15
+	  Options: Inlining false, Optimization false, Expressions true, Deforming true
+2026-09-30 21:03:17.340 UTC [85] LOG:  duration: 1171.117 ms  plan:
+	Query Text: with LatestOrderCte(order_id, customer_id, created_at, total_amount, row_number) AS( select po1_0.id,po1_0.customer_id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc nulls last,po1_0.id desc nulls last) from purchase_order po1_0 where po1_0.customer_id<=$1 ) select loc1_0.customer_id,c1_0.name,loc1_0.order_id,loc1_0.created_at,loc1_0.total_amount from LatestOrderCte loc1_0 join customer c1_0 on (c1_0.id=loc1_0.customer_id) where loc1_0.row_number=$2 order by loc1_0.customer_id
+	Query Parameters: $1 = '100000', $2 = '1'
+	Merge Join  (cost=1.95..159893.25 rows=5000 width=43)
+	  Merge Cond: (loc1_0.customer_id = c1_0.id)
+	  ->  Subquery Scan on loc1_0  (cost=1.66..155837.46 rows=5000 width=29)
+	        Filter: (loc1_0.row_number = '1'::bigint)
+	        ->  WindowAgg  (cost=1.66..143337.46 rows=1000000 width=37)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= '1'::bigint)
+	              ->  Incremental Sort  (cost=1.52..123337.46 rows=1000000 width=29)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC NULLS LAST, po1_0.id DESC NULLS LAST
+	                    Presorted Key: po1_0.customer_id
+	                    ->  Index Scan using idx_purchase_order_customer on purchase_order po1_0  (cost=0.42..92213.56 rows=1000000 width=29)
+	                          Index Cond: (customer_id <= '100000'::bigint)
+	  ->  Index Scan using customer_pkey on customer c1_0  (cost=0.29..3743.29 rows=100000 width=22)
+	JIT:
+	  Functions: 15
+	  Options: Inlining false, Optimization false, Expressions true, Deforming true
+2026-09-30 21:03:34.249 UTC [85] LOG:  duration: 970.741 ms  plan:
+	Query Text: with LatestOrderCte(order_id, customer_id, created_at, total_amount, row_number) AS( select po1_0.id,po1_0.customer_id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc nulls last,po1_0.id desc nulls last) from purchase_order po1_0 where po1_0.customer_id<=$1 ) select loc1_0.customer_id,c1_0.name,loc1_0.order_id,loc1_0.created_at,loc1_0.total_amount from LatestOrderCte loc1_0 join customer c1_0 on (c1_0.id=loc1_0.customer_id) where loc1_0.row_number=$2 order by loc1_0.customer_id
+	Query Parameters: $1 = '100000', $2 = '1'
+	Merge Join  (cost=1.95..159893.25 rows=5000 width=43)
+	  Merge Cond: (loc1_0.customer_id = c1_0.id)
+	  ->  Subquery Scan on loc1_0  (cost=1.66..155837.46 rows=5000 width=29)
+	        Filter: (loc1_0.row_number = '1'::bigint)
+	        ->  WindowAgg  (cost=1.66..143337.46 rows=1000000 width=37)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= '1'::bigint)
+	              ->  Incremental Sort  (cost=1.52..123337.46 rows=1000000 width=29)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC NULLS LAST, po1_0.id DESC NULLS LAST
+	                    Presorted Key: po1_0.customer_id
+	                    ->  Index Scan using idx_purchase_order_customer on purchase_order po1_0  (cost=0.42..92213.56 rows=1000000 width=29)
+	                          Index Cond: (customer_id <= '100000'::bigint)
+	  ->  Index Scan using customer_pkey on customer c1_0  (cost=0.29..3743.29 rows=100000 width=22)
+	JIT:
+	  Functions: 15
+	  Options: Inlining false, Optimization false, Expressions true, Deforming true
+2026-09-30 21:03:47.026 UTC [85] LOG:  duration: 976.787 ms  plan:
+	Query Text: with LatestOrderCte(order_id, customer_id, created_at, total_amount, row_number) AS( select po1_0.id,po1_0.customer_id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc nulls last,po1_0.id desc nulls last) from purchase_order po1_0 where po1_0.customer_id<=$1 ) select loc1_0.customer_id,c1_0.name,loc1_0.order_id,loc1_0.created_at,loc1_0.total_amount from LatestOrderCte loc1_0 join customer c1_0 on (c1_0.id=loc1_0.customer_id) where loc1_0.row_number=$2 order by loc1_0.customer_id
+	Query Parameters: $1 = '100000', $2 = '1'
+	Merge Join  (cost=1.95..159893.25 rows=5000 width=43)
+	  Merge Cond: (loc1_0.customer_id = c1_0.id)
+	  ->  Subquery Scan on loc1_0  (cost=1.66..155837.46 rows=5000 width=29)
+	        Filter: (loc1_0.row_number = '1'::bigint)
+	        ->  WindowAgg  (cost=1.66..143337.46 rows=1000000 width=37)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= '1'::bigint)
+	              ->  Incremental Sort  (cost=1.52..123337.46 rows=1000000 width=29)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC NULLS LAST, po1_0.id DESC NULLS LAST
+	                    Presorted Key: po1_0.customer_id
+	                    ->  Index Scan using idx_purchase_order_customer on purchase_order po1_0  (cost=0.42..92213.56 rows=1000000 width=29)
+	                          Index Cond: (customer_id <= '100000'::bigint)
+	  ->  Index Scan using customer_pkey on customer c1_0  (cost=0.29..3743.29 rows=100000 width=22)
+	JIT:
+	  Functions: 15
+	  Options: Inlining false, Optimization false, Expressions true, Deforming true
+

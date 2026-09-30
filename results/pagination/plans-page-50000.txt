@@ -1,0 +1,146 @@
+EXPLAIN ANALYZE per strategy, page 50000 (offset 999980 rows)
+	Query Text: select 'plan-marker spring-data-page'
+	Result  (cost=0.00..0.01 rows=1 width=32) (actual time=0.002..0.002 rows=1.00 loops=1)
+2026-09-30 19:45:28.297 UTC [85] LOG:  duration: 548.965 ms  plan:
+	Query Text: select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 order by po1_0.created_at desc,po1_0.id desc offset $1 rows fetch first $2 rows only
+	Query Parameters: $1 = '999980', $2 = '20'
+	Limit  (cost=10008.90..20017.37 rows=100000 width=37) (actual time=548.940..548.947 rows=20.00 loops=1)
+	  Buffers: shared hit=1003498
+	  ->  Index Scan Backward using idx_purchase_order_created_at_id on purchase_order po1_0  (cost=0.42..100085.15 rows=1000000 width=37) (actual time=0.032..521.755 rows=1000000.00 loops=1)
+	        Index Searches: 1
+	        Buffers: shared hit=1003498
+2026-09-30 19:45:28.347 UTC [85] LOG:  duration: 47.208 ms  plan:
+	Query Text: select count(po1_0.id) from purchase_order po1_0
+	Finalize Aggregate  (cost=23731.55..23731.56 rows=1 width=8) (actual time=43.847..47.200 rows=1.00 loops=1)
+	  Buffers: shared hit=17523
+	  ->  Gather  (cost=23731.33..23731.54 rows=2 width=8) (actual time=43.714..47.192 rows=3.00 loops=1)
+	        Workers Planned: 2
+	        Workers Launched: 2
+	        Buffers: shared hit=17523
+	        ->  Partial Aggregate  (cost=22731.33..22731.34 rows=1 width=8) (actual time=34.853..34.854 rows=1.00 loops=3)
+	              Buffers: shared hit=17523
+	              ->  Parallel Seq Scan on purchase_order po1_0  (cost=0.00..21689.67 rows=416667 width=8) (actual time=0.990..16.130 rows=333333.33 loops=3)
+	                    Buffers: shared hit=17523
+2026-09-30 19:45:28.352 UTC [85] LOG:  duration: 0.004 ms  plan:
+	Query Text: select 'plan-marker jpa-offset'
+	Result  (cost=0.00..0.01 rows=1 width=32) (actual time=0.002..0.002 rows=1.00 loops=1)
+2026-09-30 19:45:28.909 UTC [85] LOG:  duration: 554.395 ms  plan:
+	Query Text: select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 order by po1_0.created_at desc,po1_0.id desc offset $1 rows fetch first $2 rows only
+	Query Parameters: $1 = '999980', $2 = '20'
+	Limit  (cost=10008.90..20017.37 rows=100000 width=37) (actual time=554.372..554.379 rows=20.00 loops=1)
+	  Buffers: shared hit=1003498
+	  ->  Index Scan Backward using idx_purchase_order_created_at_id on purchase_order po1_0  (cost=0.42..100085.15 rows=1000000 width=37) (actual time=0.021..527.867 rows=1000000.00 loops=1)
+	        Index Searches: 1
+	        Buffers: shared hit=1003498
+2026-09-30 19:45:28.913 UTC [85] LOG:  duration: 0.003 ms  plan:
+	Query Text: select 'plan-marker blaze-offset'
+	Result  (cost=0.00..0.01 rows=1 width=32) (actual time=0.001..0.001 rows=1.00 loops=1)
+2026-09-30 19:45:29.424 UTC [85] LOG:  duration: 507.937 ms  plan:
+	Query Text: select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 order by po1_0.created_at desc,po1_0.id desc offset $1 rows fetch first $2 rows only
+	Query Parameters: $1 = '999980', $2 = '20'
+	Limit  (cost=10008.90..20017.37 rows=100000 width=37) (actual time=507.912..507.918 rows=20.00 loops=1)
+	  Buffers: shared hit=1003498
+	  ->  Index Scan Backward using idx_purchase_order_created_at_id on purchase_order po1_0  (cost=0.42..100085.15 rows=1000000 width=37) (actual time=0.014..483.444 rows=1000000.00 loops=1)
+	        Index Searches: 1
+	        Buffers: shared hit=1003498
+2026-09-30 19:45:29.428 UTC [85] LOG:  duration: 0.003 ms  plan:
+	Query Text: select 'plan-marker spring-data-keyset'
+	Result  (cost=0.00..0.01 rows=1 width=32) (actual time=0.001..0.002 rows=1.00 loops=1)
+2026-09-30 19:45:29.429 UTC [85] LOG:  duration: 0.053 ms  plan:
+	Query Text: select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 where po1_0.created_at<$1 or po1_0.created_at=$2 and po1_0.id<$3 order by po1_0.created_at desc,po1_0.id desc fetch first $4 rows only
+	Query Parameters: $1 = '2022-01-01 00:46:55', $2 = '2022-01-01 00:46:55', $3 = '35', $4 = '21'
+	Limit  (cost=184.38..184.43 rows=21 width=37) (actual time=0.041..0.043 rows=20.00 loops=1)
+	  Buffers: shared hit=24
+	  ->  Sort  (cost=184.38..184.49 rows=45 width=37) (actual time=0.040..0.041 rows=20.00 loops=1)
+	        Sort Key: created_at DESC, id DESC
+	        Sort Method: quicksort  Memory: 26kB
+	        Buffers: shared hit=24
+	        ->  Bitmap Heap Scan on purchase_order po1_0  (cost=9.22..183.17 rows=45 width=37) (actual time=0.016..0.032 rows=20.00 loops=1)
+	              Recheck Cond: ((created_at < '2022-01-01 00:46:55'::timestamp without time zone) OR ((created_at = '2022-01-01 00:46:55'::timestamp without time zone) AND (id < '35'::bigint)))
+	              Heap Blocks: exact=18
+	              Buffers: shared hit=24
+	              ->  BitmapOr  (cost=9.22..9.22 rows=45 width=0) (actual time=0.006..0.007 rows=0.00 loops=1)
+	                    Buffers: shared hit=6
+	                    ->  Bitmap Index Scan on idx_purchase_order_created_at_id  (cost=0.00..4.76 rows=45 width=0) (actual time=0.003..0.003 rows=20.00 loops=1)
+	                          Index Cond: (created_at < '2022-01-01 00:46:55'::timestamp without time zone)
+	                          Index Searches: 1
+	                          Buffers: shared hit=3
+	                    ->  Bitmap Index Scan on idx_purchase_order_created_at_id  (cost=0.00..4.43 rows=1 width=0) (actual time=0.003..0.003 rows=0.00 loops=1)
+	                          Index Cond: ((created_at = '2022-01-01 00:46:55'::timestamp without time zone) AND (id < '35'::bigint))
+	                          Index Searches: 1
+	                          Buffers: shared hit=3
+2026-09-30 19:45:29.434 UTC [85] LOG:  duration: 0.003 ms  plan:
+	Query Text: select 'plan-marker hibernate-keyset'
+	Result  (cost=0.00..0.01 rows=1 width=32) (actual time=0.001..0.002 rows=1.00 loops=1)
+2026-09-30 19:45:29.435 UTC [85] LOG:  duration: 0.065 ms  plan:
+	Query Text: select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 where po1_0.created_at<$1 or po1_0.id<$2 and po1_0.created_at=$3 order by 2 desc,1 desc fetch first $4 rows only
+	Query Parameters: $1 = '2022-01-01 00:46:55', $2 = '35', $3 = '2022-01-01 00:46:55', $4 = '21'
+	Limit  (cost=184.38..184.43 rows=21 width=37) (actual time=0.052..0.055 rows=20.00 loops=1)
+	  Buffers: shared hit=24
+	  ->  Sort  (cost=184.38..184.49 rows=45 width=37) (actual time=0.051..0.053 rows=20.00 loops=1)
+	        Sort Key: created_at DESC, id DESC
+	        Sort Method: quicksort  Memory: 26kB
+	        Buffers: shared hit=24
+	        ->  Bitmap Heap Scan on purchase_order po1_0  (cost=9.22..183.17 rows=45 width=37) (actual time=0.019..0.043 rows=20.00 loops=1)
+	              Recheck Cond: ((created_at < '2022-01-01 00:46:55'::timestamp without time zone) OR ((created_at = '2022-01-01 00:46:55'::timestamp without time zone) AND (id < '35'::bigint)))
+	              Heap Blocks: exact=18
+	              Buffers: shared hit=24
+	              ->  BitmapOr  (cost=9.22..9.22 rows=45 width=0) (actual time=0.008..0.008 rows=0.00 loops=1)
+	                    Buffers: shared hit=6
+	                    ->  Bitmap Index Scan on idx_purchase_order_created_at_id  (cost=0.00..4.76 rows=45 width=0) (actual time=0.004..0.004 rows=20.00 loops=1)
+	                          Index Cond: (created_at < '2022-01-01 00:46:55'::timestamp without time zone)
+	                          Index Searches: 1
+	                          Buffers: shared hit=3
+	                    ->  Bitmap Index Scan on idx_purchase_order_created_at_id  (cost=0.00..4.43 rows=1 width=0) (actual time=0.004..0.004 rows=0.00 loops=1)
+	                          Index Cond: ((created_at = '2022-01-01 00:46:55'::timestamp without time zone) AND (id < '35'::bigint))
+	                          Index Searches: 1
+	                          Buffers: shared hit=3
+2026-09-30 19:45:29.439 UTC [85] LOG:  duration: 0.003 ms  plan:
+	Query Text: select 'plan-marker hql-row-value-keyset'
+	Result  (cost=0.00..0.01 rows=1 width=32) (actual time=0.001..0.001 rows=1.00 loops=1)
+2026-09-30 19:45:29.440 UTC [85] LOG:  duration: 0.046 ms  plan:
+	Query Text: select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 where (po1_0.created_at,po1_0.id)<($1,$2) order by po1_0.created_at desc,po1_0.id desc fetch first $3 rows only
+	Query Parameters: $1 = '2022-01-01 00:46:55', $2 = '35', $3 = '20'
+	Limit  (cost=0.42..81.86 rows=20 width=37) (actual time=0.010..0.036 rows=20.00 loops=1)
+	  Buffers: shared hit=23
+	  ->  Index Scan Backward using idx_purchase_order_created_at_id on purchase_order po1_0  (cost=0.42..183.64 rows=45 width=37) (actual time=0.010..0.033 rows=20.00 loops=1)
+	        Index Cond: (ROW(created_at, id) < ROW('2022-01-01 00:46:55'::timestamp without time zone, '35'::bigint))
+	        Index Searches: 1
+	        Buffers: shared hit=23
+2026-09-30 19:45:29.443 UTC [85] LOG:  duration: 0.003 ms  plan:
+	Query Text: select 'plan-marker blaze-keyset'
+	Result  (cost=0.00..0.01 rows=1 width=32) (actual time=0.001..0.002 rows=1.00 loops=1)
+2026-09-30 19:45:29.445 UTC [85] LOG:  duration: 0.040 ms  plan:
+	Query Text: select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 where (po1_0.created_at, po1_0.id) < ($1, $2) and 0=0 order by po1_0.created_at desc,po1_0.id desc offset $3 rows fetch first $4 rows only
+	Query Parameters: $1 = '2022-01-01 00:46:55', $2 = '35', $3 = '0', $4 = '20'
+	Limit  (cost=0.42..81.86 rows=20 width=37) (actual time=0.009..0.031 rows=20.00 loops=1)
+	  Buffers: shared hit=23
+	  ->  Index Scan Backward using idx_purchase_order_created_at_id on purchase_order po1_0  (cost=0.42..183.64 rows=45 width=37) (actual time=0.008..0.029 rows=20.00 loops=1)
+	        Index Cond: (ROW(created_at, id) < ROW('2022-01-01 00:46:55'::timestamp without time zone, '35'::bigint))
+	        Index Searches: 1
+	        Buffers: shared hit=23
+2026-09-30 19:45:29.449 UTC [85] LOG:  duration: 0.003 ms  plan:
+	Query Text: select 'plan-marker blaze-keyset-with-count'
+	Result  (cost=0.00..0.01 rows=1 width=32) (actual time=0.001..0.001 rows=1.00 loops=1)
+2026-09-30 19:45:29.494 UTC [85] LOG:  duration: 42.735 ms  plan:
+	Query Text: select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount,(select count(*) from purchase_order po2_0) from purchase_order po1_0 where (po1_0.created_at, po1_0.id) < ($1, $2) and 0=0 order by po1_0.created_at desc,po1_0.id desc offset $3 rows fetch first $4 rows only
+	Query Parameters: $1 = '2022-01-01 00:46:55', $2 = '35', $3 = '0', $4 = '20'
+	Limit  (cost=15837.41..15918.84 rows=20 width=45) (actual time=40.249..42.715 rows=20.00 loops=1)
+	  Buffers: shared hit=1178
+	  InitPlan 1
+	    ->  Finalize Aggregate  (cost=15836.97..15836.98 rows=1 width=8) (actual time=40.238..42.682 rows=1.00 loops=1)
+	          Buffers: shared hit=1155
+	          ->  Gather  (cost=15836.76..15836.97 rows=2 width=8) (actual time=40.117..42.675 rows=3.00 loops=1)
+	                Workers Planned: 2
+	                Workers Launched: 2
+	                Buffers: shared hit=1155
+	                ->  Partial Aggregate  (cost=14836.76..14836.77 rows=1 width=8) (actual time=31.119..31.120 rows=1.00 loops=3)
+	                      Buffers: shared hit=1155
+	                      ->  Parallel Index Only Scan using idx_purchase_order_customer on purchase_order po2_0  (cost=0.42..13795.09 rows=416667 width=0) (actual time=0.019..17.711 rows=333333.33 loops=3)
+	                            Heap Fetches: 0
+	                            Index Searches: 1
+	                            Buffers: shared hit=1155
+	  ->  Index Scan Backward using idx_purchase_order_created_at_id on purchase_order po1_0  (cost=0.42..183.64 rows=45 width=45) (actual time=40.247..40.268 rows=20.00 loops=1)
+	        Index Cond: (ROW(created_at, id) < ROW('2022-01-01 00:46:55'::timestamp without time zone, '35'::bigint))
+	        Index Searches: 1
+	        Buffers: shared hit=1178

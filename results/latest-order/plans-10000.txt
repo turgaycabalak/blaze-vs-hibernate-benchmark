@@ -1,0 +1,198 @@
+EXPLAIN ANALYZE per strategy, 10000 customers in scope
+	Query Text: select 'plan-marker jpql-not-exists'
+	Result  (cost=0.00..0.01 rows=1 width=32) (actual time=0.002..0.002 rows=1.00 loops=1)
+2026-09-30 20:59:49.743 UTC [85] LOG:  duration: 169.667 ms  plan:
+	Query Text: select c1_0.id,c1_0.name,po1_0.id,po1_0.created_at,po1_0.total_amount from purchase_order po1_0 join customer c1_0 on c1_0.id=po1_0.customer_id where c1_0.id<=$1 and not exists(select 1 from purchase_order po2_0 where po2_0.customer_id=c1_0.id and (po2_0.created_at>po1_0.created_at or (po2_0.created_at=po1_0.created_at and po2_0.id>po1_0.id))) order by c1_0.id
+	Query Parameters: $1 = '10000'
+	Gather Merge  (cost=54065.77..59396.79 rows=45773 width=43) (actual time=159.576..164.764 rows=10000.00 loops=1)
+	  Workers Planned: 2
+	  Workers Launched: 2
+	  Buffers: shared hit=35490
+	  ->  Sort  (cost=53065.75..53113.43 rows=19072 width=43) (actual time=146.571..146.962 rows=3333.33 loops=3)
+	        Sort Key: c1_0.id
+	        Sort Method: quicksort  Memory: 25kB
+	        Buffers: shared hit=35490
+	        Worker 0:  Sort Method: quicksort  Memory: 25kB
+	        Worker 1:  Sort Method: quicksort  Memory: 1010kB
+	        ->  Parallel Hash Right Anti Join  (cost=23839.34..51709.81 rows=19072 width=43) (actual time=144.431..145.868 rows=3333.33 loops=3)
+	              Hash Cond: (po2_0.customer_id = c1_0.id)
+	              Join Filter: ((po2_0.created_at > po1_0.created_at) OR ((po2_0.created_at = po1_0.created_at) AND (po2_0.id > po1_0.id)))
+	              Rows Removed by Join Filter: 183333
+	              Buffers: shared hit=35474
+	              ->  Parallel Seq Scan on purchase_order po2_0  (cost=0.00..21689.67 rows=416667 width=24) (actual time=1.448..17.750 rows=333333.33 loops=3)
+	                    Buffers: shared hit=17523
+	              ->  Parallel Hash  (cost=23315.49..23315.49 rows=41908 width=43) (actual time=52.719..52.722 rows=33333.33 loops=3)
+	                    Buckets: 131072  Batches: 1  Memory Usage: 8896kB
+	                    Buffers: shared hit=17951
+	                    ->  Hash Join  (cost=532.03..23315.49 rows=41908 width=43) (actual time=3.783..46.020 rows=33333.33 loops=3)
+	                          Hash Cond: (po1_0.customer_id = c1_0.id)
+	                          Buffers: shared hit=17951
+	                          ->  Parallel Seq Scan on purchase_order po1_0  (cost=0.00..21689.67 rows=416667 width=29) (actual time=1.002..15.438 rows=333333.33 loops=3)
+	                                Buffers: shared hit=17523
+	                          ->  Hash  (cost=406.31..406.31 rows=10058 width=22) (actual time=2.740..2.741 rows=10000.00 loops=3)
+	                                Buckets: 16384  Batches: 1  Memory Usage: 655kB
+	                                Buffers: shared hit=428
+	                                ->  Index Scan using customer_pkey on customer c1_0  (cost=0.29..406.31 rows=10058 width=22) (actual time=0.019..1.529 rows=10000.00 loops=3)
+	                                      Index Cond: (id <= '10000'::bigint)
+	                                      Index Searches: 3
+	                                      Buffers: shared hit=428
+2026-09-30 20:59:49.749 UTC [85] LOG:  duration: 0.003 ms  plan:
+	Query Text: select 'plan-marker hql-derived-table'
+	Result  (cost=0.00..0.01 rows=1 width=32) (actual time=0.001..0.002 rows=1.00 loops=1)
+2026-09-30 20:59:49.845 UTC [85] LOG:  duration: 90.039 ms  plan:
+	Query Text: select l1_0.customerId,c2_0.name,l1_0.orderId,l1_0.createdAt,l1_0.totalAmount from (select po1_0.customer_id,po1_0.id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc,po1_0.id desc) from purchase_order po1_0 where po1_0.customer_id<=$1) l1_0(customerId,orderId,createdAt,totalAmount,rn) join customer c2_0 on c2_0.id=l1_0.customerId where l1_0.rn=1 order by l1_0.customerId
+	Query Parameters: $1 = '10000'
+	Nested Loop  (cost=30851.05..37254.43 rows=505 width=43) (actual time=54.786..85.303 rows=10000.00 loops=1)
+	  Buffers: shared hit=38869, temp read=478 written=479
+	  ->  Subquery Scan on l1_0  (cost=30850.76..34385.88 rows=505 width=29) (actual time=54.763..75.079 rows=10000.00 loops=1)
+	        Filter: (l1_0.rn = 1)
+	        Buffers: shared hit=8869, temp read=478 written=479
+	        ->  WindowAgg  (cost=30850.76..33123.33 rows=101004 width=37) (actual time=54.761..74.235 rows=10000.00 loops=1)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= 1)
+	              Storage: Memory  Maximum Storage: 17kB
+	              Buffers: shared hit=8869, temp read=478 written=479
+	              ->  Sort  (cost=30850.74..31103.25 rows=101004 width=29) (actual time=54.752..63.055 rows=100000.00 loops=1)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC, po1_0.id DESC
+	                    Sort Method: external merge  Disk: 3824kB
+	                    Buffers: shared hit=8869, temp read=478 written=479
+	                    ->  Bitmap Heap Scan on purchase_order po1_0  (cost=1251.21..20036.76 rows=101004 width=29) (actual time=4.237..23.444 rows=100000.00 loops=1)
+	                          Recheck Cond: (customer_id <= '10000'::bigint)
+	                          Heap Blocks: exact=8752
+	                          Buffers: shared hit=8869
+	                          ->  Bitmap Index Scan on idx_purchase_order_customer  (cost=0.00..1225.95 rows=101004 width=0) (actual time=3.245..3.245 rows=100000.00 loops=1)
+	                                Index Cond: (customer_id <= '10000'::bigint)
+	                                Index Searches: 1
+	                                Buffers: shared hit=117
+	  ->  Index Scan using customer_pkey on customer c2_0  (cost=0.29..5.68 rows=1 width=22) (actual time=0.001..0.001 rows=1.00 loops=10000)
+	        Index Cond: (id = l1_0.customerid)
+	        Index Searches: 10000
+	        Buffers: shared hit=30000
+2026-09-30 20:59:49.851 UTC [85] LOG:  duration: 0.003 ms  plan:
+	Query Text: select 'plan-marker hql-cte'
+	Result  (cost=0.00..0.01 rows=1 width=32) (actual time=0.001..0.002 rows=1.00 loops=1)
+2026-09-30 20:59:49.944 UTC [85] LOG:  duration: 85.988 ms  plan:
+	Query Text: with latest (customerId,orderId,createdAt,totalAmount,rn) as (select po1_0.customer_id,po1_0.id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc,po1_0.id desc) from purchase_order po1_0 where po1_0.customer_id<=$1) select l1_0.customerId,c2_0.name,l1_0.orderId,l1_0.createdAt,l1_0.totalAmount from latest l1_0 join customer c2_0 on c2_0.id=l1_0.customerId where l1_0.rn=1 order by l1_0.customerId
+	Query Parameters: $1 = '10000'
+	Nested Loop  (cost=30851.05..37254.43 rows=505 width=43) (actual time=52.408..81.556 rows=10000.00 loops=1)
+	  Buffers: shared hit=38869, temp read=478 written=479
+	  ->  Subquery Scan on l1_0  (cost=30850.76..34385.88 rows=505 width=29) (actual time=52.386..71.898 rows=10000.00 loops=1)
+	        Filter: (l1_0.rn = 1)
+	        Buffers: shared hit=8869, temp read=478 written=479
+	        ->  WindowAgg  (cost=30850.76..33123.33 rows=101004 width=37) (actual time=52.380..71.070 rows=10000.00 loops=1)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= 1)
+	              Storage: Memory  Maximum Storage: 17kB
+	              Buffers: shared hit=8869, temp read=478 written=479
+	              ->  Sort  (cost=30850.74..31103.25 rows=101004 width=29) (actual time=52.371..60.355 rows=100000.00 loops=1)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC, po1_0.id DESC
+	                    Sort Method: external merge  Disk: 3824kB
+	                    Buffers: shared hit=8869, temp read=478 written=479
+	                    ->  Bitmap Heap Scan on purchase_order po1_0  (cost=1251.21..20036.76 rows=101004 width=29) (actual time=4.324..22.832 rows=100000.00 loops=1)
+	                          Recheck Cond: (customer_id <= '10000'::bigint)
+	                          Heap Blocks: exact=8752
+	                          Buffers: shared hit=8869
+	                          ->  Bitmap Index Scan on idx_purchase_order_customer  (cost=0.00..1225.95 rows=101004 width=0) (actual time=3.306..3.306 rows=100000.00 loops=1)
+	                                Index Cond: (customer_id <= '10000'::bigint)
+	                                Index Searches: 1
+	                                Buffers: shared hit=117
+	  ->  Index Scan using customer_pkey on customer c2_0  (cost=0.29..5.68 rows=1 width=22) (actual time=0.001..0.001 rows=1.00 loops=10000)
+	        Index Cond: (id = l1_0.customerid)
+	        Index Searches: 10000
+	        Buffers: shared hit=30000
+2026-09-30 20:59:49.950 UTC [85] LOG:  duration: 0.003 ms  plan:
+	Query Text: select 'plan-marker native-distinct-on'
+	Result  (cost=0.00..0.01 rows=1 width=32) (actual time=0.001..0.002 rows=1.00 loops=1)
+2026-09-30 20:59:50.088 UTC [85] LOG:  duration: 133.602 ms  plan:
+	Query Text: select distinct on (o.customer_id) o.customer_id, c.name, o.id, o.created_at, o.total_amount
+	from purchase_order o
+	join customer c on c.id = o.customer_id
+	where o.customer_id <= $1
+	order by o.customer_id, o.created_at desc, o.id desc
+	Query Parameters: $1 = '10000'
+	Unique  (cost=70911.09..72577.76 rows=96511 width=43) (actual time=106.550..128.331 rows=10000.00 loops=1)
+	  Buffers: shared hit=10005, temp read=674 written=676
+	  ->  Sort  (cost=70911.09..71744.43 rows=333333 width=43) (actual time=106.548..120.189 rows=100000.00 loops=1)
+	        Sort Key: o.customer_id, o.created_at DESC, o.id DESC
+	        Sort Method: external merge  Disk: 5392kB
+	        Buffers: shared hit=10005, temp read=674 written=676
+	        ->  Hash Join  (cost=7513.76..30078.45 rows=333333 width=43) (actual time=27.019..69.404 rows=100000.00 loops=1)
+	              Hash Cond: (o.customer_id = c.id)
+	              Buffers: shared hit=10005
+	              ->  Bitmap Heap Scan on purchase_order o  (cost=4127.76..25817.42 rows=333333 width=29) (actual time=4.624..19.675 rows=100000.00 loops=1)
+	                    Recheck Cond: (customer_id <= $1)
+	                    Heap Blocks: exact=8752
+	                    Buffers: shared hit=8869
+	                    ->  Bitmap Index Scan on idx_purchase_order_customer  (cost=0.00..4044.42 rows=333333 width=0) (actual time=3.631..3.632 rows=100000.00 loops=1)
+	                          Index Cond: (customer_id <= $1)
+	                          Index Searches: 1
+	                          Buffers: shared hit=117
+	              ->  Hash  (cost=2136.00..2136.00 rows=100000 width=22) (actual time=22.073..22.074 rows=100000.00 loops=1)
+	                    Buckets: 131072  Batches: 1  Memory Usage: 6493kB
+	                    Buffers: shared hit=1136
+	                    ->  Seq Scan on customer c  (cost=0.00..2136.00 rows=100000 width=22) (actual time=0.024..7.401 rows=100000.00 loops=1)
+	                          Buffers: shared hit=1136
+2026-09-30 20:59:50.096 UTC [85] LOG:  duration: 0.003 ms  plan:
+	Query Text: select 'plan-marker blaze-cte'
+	Result  (cost=0.00..0.01 rows=1 width=32) (actual time=0.002..0.002 rows=1.00 loops=1)
+2026-09-30 20:59:50.261 UTC [85] LOG:  duration: 86.148 ms  plan:
+	Query Text: with LatestOrderCte(order_id, customer_id, created_at, total_amount, row_number) AS( select po1_0.id,po1_0.customer_id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc nulls last,po1_0.id desc nulls last) from purchase_order po1_0 where po1_0.customer_id<=$1 ) select loc1_0.customer_id,c1_0.name,loc1_0.order_id,loc1_0.created_at,loc1_0.total_amount from LatestOrderCte loc1_0 join customer c1_0 on (c1_0.id=loc1_0.customer_id) where loc1_0.row_number=$2 order by loc1_0.customer_id
+	Query Parameters: $1 = '10000', $2 = '1'
+	Nested Loop  (cost=30851.05..37254.43 rows=505 width=43) (actual time=53.166..81.842 rows=10000.00 loops=1)
+	  Buffers: shared hit=38869, temp read=478 written=479
+	  ->  Subquery Scan on loc1_0  (cost=30850.76..34385.88 rows=505 width=29) (actual time=53.144..72.396 rows=10000.00 loops=1)
+	        Filter: (loc1_0.row_number = '1'::bigint)
+	        Buffers: shared hit=8869, temp read=478 written=479
+	        ->  WindowAgg  (cost=30850.76..33123.33 rows=101004 width=37) (actual time=53.143..71.561 rows=10000.00 loops=1)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= '1'::bigint)
+	              Storage: Memory  Maximum Storage: 17kB
+	              Buffers: shared hit=8869, temp read=478 written=479
+	              ->  Sort  (cost=30850.74..31103.25 rows=101004 width=29) (actual time=53.133..61.040 rows=100000.00 loops=1)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC NULLS LAST, po1_0.id DESC NULLS LAST
+	                    Sort Method: external merge  Disk: 3824kB
+	                    Buffers: shared hit=8869, temp read=478 written=479
+	                    ->  Bitmap Heap Scan on purchase_order po1_0  (cost=1251.21..20036.76 rows=101004 width=29) (actual time=4.295..22.633 rows=100000.00 loops=1)
+	                          Recheck Cond: (customer_id <= '10000'::bigint)
+	                          Heap Blocks: exact=8752
+	                          Buffers: shared hit=8869
+	                          ->  Bitmap Index Scan on idx_purchase_order_customer  (cost=0.00..1225.95 rows=101004 width=0) (actual time=3.320..3.321 rows=100000.00 loops=1)
+	                                Index Cond: (customer_id <= '10000'::bigint)
+	                                Index Searches: 1
+	                                Buffers: shared hit=117
+	  ->  Index Scan using customer_pkey on customer c1_0  (cost=0.29..5.68 rows=1 width=22) (actual time=0.001..0.001 rows=1.00 loops=10000)
+	        Index Cond: (id = loc1_0.customer_id)
+	        Index Searches: 10000
+	        Buffers: shared hit=30000
+2026-09-30 20:59:50.269 UTC [85] LOG:  duration: 0.004 ms  plan:
+	Query Text: select 'plan-marker blaze-from-subquery'
+	Result  (cost=0.00..0.01 rows=1 width=32) (actual time=0.002..0.002 rows=1.00 loops=1)
+2026-09-30 20:59:50.437 UTC [85] LOG:  duration: 91.445 ms  plan:
+	Query Text: select loc1_0.customer_id,c1_0.name,loc1_0.order_id,loc1_0.created_at,loc1_0.total_amount from (select po1_0.id,po1_0.customer_id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc nulls last,po1_0.id desc nulls last) from purchase_order po1_0 where po1_0.customer_id<=$1) loc1_0(order_id,customer_id,created_at,total_amount,row_number) join customer c1_0 on (c1_0.id=loc1_0.customer_id) where loc1_0.row_number=$2 order by loc1_0.customer_id
+	Query Parameters: $1 = '10000', $2 = '1'
+	Nested Loop  (cost=30851.05..37254.43 rows=505 width=43) (actual time=53.134..86.399 rows=10000.00 loops=1)
+	  Buffers: shared hit=38869, temp read=478 written=479
+	  ->  Subquery Scan on loc1_0  (cost=30850.76..34385.88 rows=505 width=29) (actual time=53.111..75.363 rows=10000.00 loops=1)
+	        Filter: (loc1_0.row_number = '1'::bigint)
+	        Buffers: shared hit=8869, temp read=478 written=479
+	        ->  WindowAgg  (cost=30850.76..33123.33 rows=101004 width=37) (actual time=53.110..74.439 rows=10000.00 loops=1)
+	              Window: w1 AS (PARTITION BY po1_0.customer_id ORDER BY po1_0.created_at, po1_0.id ROWS UNBOUNDED PRECEDING)
+	              Run Condition: (row_number() OVER w1 <= '1'::bigint)
+	              Storage: Memory  Maximum Storage: 17kB
+	              Buffers: shared hit=8869, temp read=478 written=479
+	              ->  Sort  (cost=30850.74..31103.25 rows=101004 width=29) (actual time=53.100..61.939 rows=100000.00 loops=1)
+	                    Sort Key: po1_0.customer_id, po1_0.created_at DESC NULLS LAST, po1_0.id DESC NULLS LAST
+	                    Sort Method: external merge  Disk: 3824kB
+	                    Buffers: shared hit=8869, temp read=478 written=479
+	                    ->  Bitmap Heap Scan on purchase_order po1_0  (cost=1251.21..20036.76 rows=101004 width=29) (actual time=4.347..23.233 rows=100000.00 loops=1)
+	                          Recheck Cond: (customer_id <= '10000'::bigint)
+	                          Heap Blocks: exact=8752
+	                          Buffers: shared hit=8869
+	                          ->  Bitmap Index Scan on idx_purchase_order_customer  (cost=0.00..1225.95 rows=101004 width=0) (actual time=3.363..3.363 rows=100000.00 loops=1)
+	                                Index Cond: (customer_id <= '10000'::bigint)
+	                                Index Searches: 1
+	                                Buffers: shared hit=117
+	  ->  Index Scan using customer_pkey on customer c1_0  (cost=0.29..5.68 rows=1 width=22) (actual time=0.001..0.001 rows=1.00 loops=10000)
+	        Index Cond: (id = loc1_0.customer_id)
+	        Index Searches: 10000
+	        Buffers: shared hit=30000

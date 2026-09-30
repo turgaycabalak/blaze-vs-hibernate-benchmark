@@ -1,0 +1,36 @@
+scenario,label,hibernate,matching_orders,actual_matching,samples,p50_ms,p95_ms,p99_ms,mean_ms,min_ms,max_ms,allocated_mb_p50,statements
+jpa-fetch-join,"JPA join fetch + setMaxResults",7.2.24.Final,1000,1000,50,12.375,14.701,17.381,12.761,11.393,17.381,5.791,1
+jpa-fetch-join,"JPA join fetch + setMaxResults",7.2.24.Final,10000,10000,50,112.194,171.654,246.034,120.937,106.121,246.034,50.629,1
+jpa-fetch-join,"JPA join fetch + setMaxResults",7.2.24.Final,50000,50000,50,636.309,824.191,827.561,668.552,571.174,827.561,243.777,1
+jpa-fetch-join,"JPA join fetch + setMaxResults",7.2.24.Final,100000,100000,50,1334.446,1447.034,1490.139,1332.044,1230.224,1490.139,485.066,1
+jpa-fetch-join,"JPA join fetch + setMaxResults",7.2.24.Final,250000,250000,50,3203.548,3364.187,3402.237,3206.244,3027.823,3402.237,1141.089,1
+spring-data-entity-graph,"Spring Data @EntityGraph + Pageable",7.2.24.Final,1000,1000,50,13.372,15.559,17.456,13.900,12.267,17.456,5.822,1
+spring-data-entity-graph,"Spring Data @EntityGraph + Pageable",7.2.24.Final,10000,10000,50,113.421,166.561,296.984,120.936,107.484,296.984,50.659,1
+spring-data-entity-graph,"Spring Data @EntityGraph + Pageable",7.2.24.Final,50000,50000,50,645.517,849.669,871.652,675.214,579.662,871.652,243.807,1
+spring-data-entity-graph,"Spring Data @EntityGraph + Pageable",7.2.24.Final,100000,100000,50,1324.607,1413.730,1432.502,1329.187,1243.843,1432.502,485.096,1
+spring-data-entity-graph,"Spring Data @EntityGraph + Pageable",7.2.24.Final,250000,250000,50,3223.060,3444.615,3667.735,3245.890,3070.830,3667.735,1141.120,1
+lazy-n-plus-1,"Lazy loading (N+1)",7.2.24.Final,1000,1000,50,10.486,13.466,14.227,10.771,8.965,14.227,0.175,21
+lazy-n-plus-1,"Lazy loading (N+1)",7.2.24.Final,10000,10000,50,12.607,18.223,27.732,13.312,9.971,27.732,0.175,21
+lazy-n-plus-1,"Lazy loading (N+1)",7.2.24.Final,50000,50000,50,11.815,16.379,25.764,12.546,9.896,25.764,0.173,21
+lazy-n-plus-1,"Lazy loading (N+1)",7.2.24.Final,100000,100000,50,11.954,20.672,21.641,12.709,9.975,21.641,0.173,21
+lazy-n-plus-1,"Lazy loading (N+1)",7.2.24.Final,250000,250000,50,12.692,23.267,24.335,14.678,10.081,24.335,0.173,21
+hibernate-batch-fetch,"Hibernate batch fetch (size 20)",7.2.24.Final,1000,1000,50,2.955,3.982,4.458,3.045,2.459,4.458,0.162,2
+hibernate-batch-fetch,"Hibernate batch fetch (size 20)",7.2.24.Final,10000,10000,50,2.893,5.075,6.275,3.256,2.485,6.275,0.162,2
+hibernate-batch-fetch,"Hibernate batch fetch (size 20)",7.2.24.Final,50000,50000,50,3.316,6.098,7.378,3.605,2.072,7.378,0.161,2
+hibernate-batch-fetch,"Hibernate batch fetch (size 20)",7.2.24.Final,100000,100000,50,3.441,6.202,10.516,3.843,2.560,10.516,0.161,2
+hibernate-batch-fetch,"Hibernate batch fetch (size 20)",7.2.24.Final,250000,250000,50,3.610,5.810,5.940,4.049,2.985,5.940,0.161,2
+hibernate-subselect-fetch,"Hibernate subselect fetch",7.2.24.Final,1000,1000,50,8.822,10.375,10.512,9.010,7.892,10.512,4.754,2
+hibernate-subselect-fetch,"Hibernate subselect fetch",7.2.24.Final,10000,10000,50,78.305,206.657,218.961,88.405,74.162,218.961,39.735,2
+hibernate-subselect-fetch,"Hibernate subselect fetch",7.2.24.Final,50000,50000,50,400.241,554.188,604.145,426.666,359.381,604.145,184.430,2
+hibernate-subselect-fetch,"Hibernate subselect fetch",7.2.24.Final,100000,100000,50,889.366,1008.142,1037.507,906.379,794.680,1037.507,366.982,2
+hibernate-subselect-fetch,"Hibernate subselect fetch",7.2.24.Final,250000,250000,50,2543.875,2694.502,2727.875,2544.764,2403.997,2727.875,915.456,2
+two-step-ids,"Hand-written: page ids, then join fetch",7.2.24.Final,1000,1000,50,3.373,4.457,5.689,3.459,2.698,5.689,0.180,2
+two-step-ids,"Hand-written: page ids, then join fetch",7.2.24.Final,10000,10000,50,4.839,6.760,12.311,4.895,2.419,12.311,0.180,2
+two-step-ids,"Hand-written: page ids, then join fetch",7.2.24.Final,50000,50000,50,4.651,8.895,12.924,4.901,2.319,12.924,0.180,2
+two-step-ids,"Hand-written: page ids, then join fetch",7.2.24.Final,100000,100000,50,5.009,8.930,9.577,5.549,2.184,9.577,0.177,2
+two-step-ids,"Hand-written: page ids, then join fetch",7.2.24.Final,250000,250000,50,6.256,6.994,8.956,6.081,2.878,8.956,0.177,2
+blaze-fetch,"Blaze fetch() + page()",7.2.24.Final,1000,1000,50,2.260,3.114,4.919,2.447,1.778,4.919,0.160,1
+blaze-fetch,"Blaze fetch() + page()",7.2.24.Final,10000,10000,50,2.575,4.249,5.222,2.835,1.928,5.222,0.160,1
+blaze-fetch,"Blaze fetch() + page()",7.2.24.Final,50000,50000,50,2.912,5.001,5.097,3.029,1.681,5.097,0.160,1
+blaze-fetch,"Blaze fetch() + page()",7.2.24.Final,100000,100000,50,3.304,5.309,5.570,3.628,2.530,5.570,0.160,1
+blaze-fetch,"Blaze fetch() + page()",7.2.24.Final,250000,250000,50,3.135,5.295,5.640,3.408,2.476,5.640,0.160,1

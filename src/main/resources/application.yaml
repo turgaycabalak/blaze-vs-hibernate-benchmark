@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: blaze-benchmark
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.session_factory.statement_inspector: dev.blazebench.support.SqlCapture
+  flyway:
+    # Full benchmark dataset: 100k customers, 10k products, 1M orders, ~3M order lines.
+    placeholders:
+      customers: 100000
+      products: 10000
+      orders: 1000000

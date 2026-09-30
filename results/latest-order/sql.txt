@@ -1,0 +1,24 @@
+SQL per strategy, Hibernate 7.4.5.Final
+
+== jpql-not-exists
+select c1_0.id,c1_0.name,po1_0.id,po1_0.created_at,po1_0.total_amount from purchase_order po1_0 join customer c1_0 on c1_0.id=po1_0.customer_id where c1_0.id<=? and not exists(select 1 from purchase_order po2_0 where po2_0.customer_id=c1_0.id and (po2_0.created_at>po1_0.created_at or (po2_0.created_at=po1_0.created_at and po2_0.id>po1_0.id))) order by c1_0.id
+
+== hql-derived-table
+select l1_0.customerId,c2_0.name,l1_0.orderId,l1_0.createdAt,l1_0.totalAmount from (select po1_0.customer_id,po1_0.id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc,po1_0.id desc) from purchase_order po1_0 where po1_0.customer_id<=?) l1_0(customerId,orderId,createdAt,totalAmount,rn) join customer c2_0 on c2_0.id=l1_0.customerId where l1_0.rn=1 order by l1_0.customerId
+
+== hql-cte
+with latest (customerId,orderId,createdAt,totalAmount,rn) as (select po1_0.customer_id,po1_0.id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc,po1_0.id desc) from purchase_order po1_0 where po1_0.customer_id<=?) select l1_0.customerId,c2_0.name,l1_0.orderId,l1_0.createdAt,l1_0.totalAmount from latest l1_0 join customer c2_0 on c2_0.id=l1_0.customerId where l1_0.rn=1 order by l1_0.customerId
+
+== native-distinct-on
+select distinct on (o.customer_id) o.customer_id, c.name, o.id, o.created_at, o.total_amount
+from purchase_order o
+join customer c on c.id = o.customer_id
+where o.customer_id <= ?
+order by o.customer_id, o.created_at desc, o.id desc
+
+== blaze-cte
+with LatestOrderCte(order_id, customer_id, created_at, total_amount, row_number) AS( select po1_0.id,po1_0.customer_id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc nulls last,po1_0.id desc nulls last) from purchase_order po1_0 where po1_0.customer_id<=? ) select loc1_0.customer_id,c1_0.name,loc1_0.order_id,loc1_0.created_at,loc1_0.total_amount from LatestOrderCte loc1_0 join customer c1_0 on (c1_0.id=loc1_0.customer_id) where loc1_0.row_number=? order by loc1_0.customer_id
+
+== blaze-from-subquery
+select loc1_0.customer_id,c1_0.name,loc1_0.order_id,loc1_0.created_at,loc1_0.total_amount from (select po1_0.id,po1_0.customer_id,po1_0.created_at,po1_0.total_amount,row_number() over(partition by po1_0.customer_id order by po1_0.created_at desc nulls last,po1_0.id desc nulls last) from purchase_order po1_0 where po1_0.customer_id<=?) loc1_0(order_id,customer_id,created_at,total_amount,row_number) join customer c1_0 on (c1_0.id=loc1_0.customer_id) where loc1_0.row_number=? order by loc1_0.customer_id
+

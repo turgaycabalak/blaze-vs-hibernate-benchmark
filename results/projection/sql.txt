@@ -1,0 +1,30 @@
+SQL per strategy, Hibernate 7.4.5.Final (page size 20; N+1 truncated after 3 statements)
+
+== entity-fetch-join (1 statements)
+select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.c1_0_id,po1_0.c1_0_country,po1_0.c1_0_created_at,po1_0.c1_0_email,po1_0.c1_0_name,l1_0.order_id,l1_0.id,l1_0.product_id,p1_0.id,p1_0.category,p1_0.name,p1_0.price,l1_0.quantity,l1_0.unit_price,po1_0.status,po1_0.total_amount from (select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount,c1_0.id,c1_0.country,c1_0.created_at,c1_0.email,c1_0.name from purchase_order po1_0 join customer c1_0 on c1_0.id=po1_0.customer_id where exists(select 1 from order_line l1_0 join product p1_0 on p1_0.id=l1_0.product_id where po1_0.id=l1_0.order_id) order by po1_0.created_at desc,po1_0.id desc offset ? rows fetch first ? rows only) po1_0(id,created_at,customer_id,status,total_amount,c1_0_id,c1_0_country,c1_0_created_at,c1_0_email,c1_0_name) join order_line l1_0 on po1_0.id=l1_0.order_id join product p1_0 on p1_0.id=l1_0.product_id order by po1_0.created_at desc,po1_0.id desc
+
+== entity-lazy (102 statements)
+select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 order by po1_0.created_at desc,po1_0.id desc fetch first ? rows only
+select c1_0.id,c1_0.country,c1_0.created_at,c1_0.email,c1_0.name from customer c1_0 where c1_0.id=?
+select l1_0.order_id,l1_0.id,l1_0.product_id,l1_0.quantity,l1_0.unit_price from order_line l1_0 where l1_0.order_id=?
+
+== entity-lazy-batch (7 statements)
+select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 order by po1_0.created_at desc,po1_0.id desc fetch first ? rows only
+select c1_0.id,c1_0.country,c1_0.created_at,c1_0.email,c1_0.name from customer c1_0 where c1_0.id = any (?)
+select l1_0.order_id,l1_0.id,l1_0.product_id,l1_0.quantity,l1_0.unit_price from order_line l1_0 where l1_0.order_id = any (?)
+
+== spring-data-projection (102 statements)
+select po1_0.id,po1_0.created_at,po1_0.customer_id,po1_0.status,po1_0.total_amount from purchase_order po1_0 order by po1_0.created_at desc,po1_0.id desc fetch first ? rows only
+select c1_0.id,c1_0.country,c1_0.created_at,c1_0.email,c1_0.name from customer c1_0 where c1_0.id=?
+select l1_0.order_id,l1_0.id,l1_0.product_id,l1_0.quantity,l1_0.unit_price from order_line l1_0 where l1_0.order_id=?
+
+== hql-dto (2 statements)
+select po1_0.id,po1_0.created_at,po1_0.status,po1_0.total_amount,c1_0.name,c1_0.country from purchase_order po1_0 join customer c1_0 on c1_0.id=po1_0.customer_id order by po1_0.created_at desc,po1_0.id desc fetch first ? rows only
+select ol1_0.order_id,ol1_0.id,p1_0.name,ol1_0.quantity,ol1_0.unit_price from order_line ol1_0 join product p1_0 on p1_0.id=ol1_0.product_id where ol1_0.order_id in (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+
+== blaze-view-join (1 statements)
+select po1_0.id,po1_0.created_at,c1_0.country,c1_0.name,l1_0.id,p1_0.name,l1_0.quantity,l1_0.unit_price,po1_0.status,po1_0.total_amount from purchase_order po1_0 join customer c1_0 on c1_0.id=po1_0.customer_id left join order_line l1_0 on po1_0.id=l1_0.order_id left join product p1_0 on p1_0.id=l1_0.product_id where po1_0.id in (select po2_0.id from purchase_order po2_0 order by po2_0.created_at desc,po2_0.id desc fetch first 20 rows only) order by po1_0.created_at desc,po1_0.id desc
+
+== blaze-view-multiset (1 statements)
+select po1_0.id,po1_0.created_at,c1_0.country,c1_0.name,(select jsonb_agg(jsonb_build_object('f0','' || l1_0.id,'f1','' || p1_0.name,'f2','' || l1_0.quantity,'f3','' || l1_0.unit_price)) from order_line l1_0 join product p1_0 on p1_0.id=l1_0.product_id where po1_0.id=l1_0.order_id),po1_0.status,po1_0.total_amount from purchase_order po1_0 join customer c1_0 on c1_0.id=po1_0.customer_id order by po1_0.created_at desc,po1_0.id desc offset ? rows fetch first ? rows only
+

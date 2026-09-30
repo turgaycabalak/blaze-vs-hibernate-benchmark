@@ -1,0 +1,29 @@
+scenario,label,page_size,samples,p50_ms,p95_ms,p99_ms,mean_ms,min_ms,max_ms,allocated_mb_p50,statements
+entity-fetch-join,"Entities with join fetch, mapped in Java",10,50,2.283,3.625,4.168,2.412,1.931,4.168,0.100,1
+entity-fetch-join,"Entities with join fetch, mapped in Java",50,50,3.331,3.939,4.686,3.425,2.980,4.686,0.429,1
+entity-fetch-join,"Entities with join fetch, mapped in Java",200,50,6.811,7.695,8.887,6.915,6.165,8.887,1.662,1
+entity-fetch-join,"Entities with join fetch, mapped in Java",1000,50,24.045,26.824,29.219,24.486,22.158,29.219,8.183,1
+entity-lazy,"Entities, lazy associations, mapped in Java (N+1)",10,50,21.984,27.681,45.691,22.965,19.714,45.691,0.232,56
+entity-lazy,"Entities, lazy associations, mapped in Java (N+1)",50,50,95.512,115.758,144.063,98.005,88.453,144.063,1.049,254
+entity-lazy,"Entities, lazy associations, mapped in Java (N+1)",200,50,379.228,420.106,432.141,382.966,363.115,432.141,4.118,999
+entity-lazy,"Entities, lazy associations, mapped in Java (N+1)",1000,50,1888.435,2071.908,2715.956,1924.397,1780.735,2715.956,20.505,5001
+entity-lazy-batch,"Entities, lazy + batch fetch, mapped in Java",10,50,5.833,6.762,7.259,5.845,4.981,7.259,0.249,7
+entity-lazy-batch,"Entities, lazy + batch fetch, mapped in Java",50,50,6.968,7.948,8.196,6.986,6.138,8.196,0.650,7
+entity-lazy-batch,"Entities, lazy + batch fetch, mapped in Java",200,50,9.683,11.513,14.394,9.883,8.199,14.394,2.126,6
+entity-lazy-batch,"Entities, lazy + batch fetch, mapped in Java",1000,50,25.932,29.771,32.226,26.352,23.671,32.226,10.033,6
+spring-data-projection,"Spring Data interface projection",10,50,23.952,28.519,56.793,24.730,21.416,56.793,0.618,56
+spring-data-projection,"Spring Data interface projection",50,50,101.439,111.986,117.900,102.993,96.575,117.900,2.808,254
+spring-data-projection,"Spring Data interface projection",200,50,398.795,431.214,480.845,403.210,378.317,480.845,11.047,999
+spring-data-projection,"Spring Data interface projection",1000,50,1987.148,2072.250,2302.548,1996.780,1899.694,2302.548,55.215,5001
+hql-dto,"Hand-written HQL DTO queries (2 queries)",10,50,3.141,4.038,4.778,3.217,2.700,4.778,0.072,2
+hql-dto,"Hand-written HQL DTO queries (2 queries)",50,50,4.983,5.412,6.116,5.047,4.471,6.116,0.240,2
+hql-dto,"Hand-written HQL DTO queries (2 queries)",200,50,6.259,7.948,10.412,6.458,5.518,10.412,0.877,2
+hql-dto,"Hand-written HQL DTO queries (2 queries)",1000,50,12.704,14.326,30.096,13.203,11.923,30.096,4.251,2
+blaze-view-join,"Blaze Entity View (JOIN)",10,50,2.101,3.369,4.218,2.249,1.769,4.218,0.155,1
+blaze-view-join,"Blaze Entity View (JOIN)",50,50,2.968,3.881,3.941,3.025,2.384,3.941,0.383,1
+blaze-view-join,"Blaze Entity View (JOIN)",200,50,5.188,6.431,7.632,5.321,4.584,7.632,1.243,1
+blaze-view-join,"Blaze Entity View (JOIN)",1000,50,15.890,18.660,19.628,16.321,14.870,19.628,5.874,1
+blaze-view-multiset,"Blaze Entity View (MULTISET)",10,50,2.489,3.928,5.495,2.654,2.106,5.495,0.146,1
+blaze-view-multiset,"Blaze Entity View (MULTISET)",50,50,3.525,4.341,5.641,3.617,3.160,5.641,0.339,1
+blaze-view-multiset,"Blaze Entity View (MULTISET)",200,50,6.879,8.289,10.089,7.101,6.062,10.089,1.061,1
+blaze-view-multiset,"Blaze Entity View (MULTISET)",1000,50,24.358,28.318,31.548,24.886,22.632,31.548,4.956,1
